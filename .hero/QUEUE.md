@@ -6,20 +6,19 @@
 
 # Hero Ready Queue
 
-_Generated: 2026-08-27T15:42:33Z · 84 ready specs_
-_Generated: 2026-09-03T00:20:59Z · 84 ready specs_
+_Generated: 2026-09-10T08:36:47Z · 87 ready specs_
 
 ## retrieval-contradiction-detection — Retrieval Contradiction Detection — Surface Stale Facts at Read Time
 _feature · delivering · horizon: now_
 
-_(no `## Kickoff` section — run `/design` or hand-edit /private/tmp/hero-mail-main.PaKrG3/.hero/specs/retrieval-contradiction-detection/spec.md)_
+_(no `## Kickoff` section — run `/design` or hand-edit /Users/miguelf/.copilot/copilot-worktrees/hero/miguelfv-hpeprod-turbo-telegram/.hero/specs/retrieval-contradiction-detection/spec.md)_
 
 ---
 
 ## team-connect — "Team Connect — CLI Registration with Team Server"
 _feature · delivering · horizon: now_
 
-_(no `## Kickoff` section — run `/design` or hand-edit /private/tmp/hero-mail-main.PaKrG3/.hero/planning/features/team-connect/spec.md)_
+_(no `## Kickoff` section — run `/design` or hand-edit /Users/miguelf/.copilot/copilot-worktrees/hero/miguelfv-hpeprod-turbo-telegram/.hero/planning/features/team-connect/spec.md)_
 
 ---
 
@@ -51,7 +50,45 @@ without changing Mail-read v1 behavior.
 ## agent-outposts — "Agent Outposts — Operable External Systems with Scoped Credentials and Audit-by-Construction"
 _feature · delivering · horizon: next_
 
-_(no `## Kickoff` section — run `/design` or hand-edit /private/tmp/hero-mail-main.PaKrG3/.hero/planning/features/agent-outposts/spec.md)_
+_(no `## Kickoff` section — run `/design` or hand-edit /Users/miguelf/.copilot/copilot-worktrees/hero/miguelfv-hpeprod-turbo-telegram/.hero/planning/features/agent-outposts/spec.md)_
+
+---
+
+## hsu-skill-dir-supporting-files — "Skill directories carry supporting files through every installer"
+_feature · planning · horizon: now_
+
+Deliver `hsu-skill-dir-supporting-files` (parent `harness-skills-unification`).
+In `internal/install/content.go`, make `installSkillsNested` copy the entire
+`<name>/` tree (not only `SKILL.md`), make `installSkillsFlat` inline any file
+that `SKILL.md` links via relative markdown link, and extend prune/uninstall to
+remove supporting files that disappear from canonical content. Add a fixture
+skill with a supporting file and cover it in the smoke matrix.
+
+---
+
+## hsu-user-invocable-flag — "Mark reference skills user-invocable: false; decide disable-model-invocation for workflows"
+_feature · planning · horizon: now_
+
+Deliver `hsu-user-invocable-flag` (parent `harness-skills-unification`). Add
+`user-invocable: false` to the frontmatter of every canonical skill under
+`core/skills` and `domains/*/skills` (source-level), add a test asserting the
+invariant, and record a `/decide` on whether workflow skills rendered from
+commands get `disable-model-invocation: true`. Verify Claude and Copilot honor
+the flag; verify Codex/Grok/Cursor/OpenCode ignore unknown fields without error.
+
+---
+
+## harness-skills-unification — "Harness Skills Unification — Hero workflows as native, user-invocable skills on every harness"
+_initiative · planning · horizon: now_
+
+_Run opener — arm with `/drive harness-skills-unification`_
+
+A user who runs `hero install --target <any>` gets Hero's 29 workflows as
+native `/`-callable entries in that harness — starting with the GitHub Copilot
+CLI and App, where today they get **zero** — while the reference skills that
+back those workflows stay out of the `/` menu. Along the way, collapse the
+"commands vs skills" split that every target currently pays for in a different
+way (VS Code-only prompts, `command-` prefixes, duplicate `/drive` entries).
 
 ---
 
@@ -99,7 +136,7 @@ Build a Hero-native system that actively manages session context — not just *i
 ## hero-surface-architecture — Hero Surface Architecture — One Surface, Every Layer, Every Role
 _initiative · planning · horizon: now_
 
-_(no `## Goal` run opener — hand-edit /private/tmp/hero-mail-main.PaKrG3/.hero/planning/initiatives/hero-surface-architecture/spec.md)_
+_(no `## Goal` run opener — hand-edit /Users/miguelf/.copilot/copilot-worktrees/hero/miguelfv-hpeprod-turbo-telegram/.hero/planning/initiatives/hero-surface-architecture/spec.md)_
 
 ---
 
@@ -313,7 +350,7 @@ Cold-start prompt:
 ## synthesis-maintenance — "Synthesis Maintenance — Write-Through Coherence for the Hero Graph"
 _feature · planning · horizon: now_
 
-_(no `## Kickoff` section — run `/design` or hand-edit /private/tmp/hero-mail-main.PaKrG3/.hero/planning/features/synthesis-maintenance/spec.md)_
+_(no `## Kickoff` section — run `/design` or hand-edit /Users/miguelf/.copilot/copilot-worktrees/hero/miguelfv-hpeprod-turbo-telegram/.hero/planning/features/synthesis-maintenance/spec.md)_
 
 ---
 
@@ -383,28 +420,28 @@ Resume by reading `.hero/planning/features/satellite-corpus-integration/spec.md`
 ## premise-interrogation — "Premise Interrogation — Force-Question the Framing Before Designing"
 _feature · planning · horizon: now_
 
-_(no `## Kickoff` section — run `/design` or hand-edit /private/tmp/hero-mail-main.PaKrG3/.hero/planning/features/premise-interrogation/spec.md)_
+_(no `## Kickoff` section — run `/design` or hand-edit /Users/miguelf/.copilot/copilot-worktrees/hero/miguelfv-hpeprod-turbo-telegram/.hero/planning/features/premise-interrogation/spec.md)_
 
 ---
 
 ## peer-call-multi-cli — "Peer Call Multi-CLI — Pluggable Subagent Backends"
 _feature · planning · horizon: now_
 
-_(no `## Kickoff` section — run `/design` or hand-edit /private/tmp/hero-mail-main.PaKrG3/.hero/planning/features/peer-call-multi-cli/spec.md)_
+_(no `## Kickoff` section — run `/design` or hand-edit /Users/miguelf/.copilot/copilot-worktrees/hero/miguelfv-hpeprod-turbo-telegram/.hero/planning/features/peer-call-multi-cli/spec.md)_
 
 ---
 
 ## mail-da2727fd11615a9cafa5125c — Mail Da2727fd11615a9cafa5125c
 _feature · planning · horizon: now_
 
-_(no `## Kickoff` section — run `/design` or hand-edit /private/tmp/hero-mail-main.PaKrG3/.hero/planning/features/mail-da2727fd11615a9cafa5125c/spec.md)_
+_(no `## Kickoff` section — run `/design` or hand-edit /Users/miguelf/.copilot/copilot-worktrees/hero/miguelfv-hpeprod-turbo-telegram/.hero/planning/features/mail-da2727fd11615a9cafa5125c/spec.md)_
 
 ---
 
 ## mail-d20bcb1654f2bb82d4d973b1 — Mail D20bcb1654f2bb82d4d973b1
 _feature · planning · horizon: now_
 
-_(no `## Kickoff` section — run `/design` or hand-edit /private/tmp/hero-mail-main.PaKrG3/.hero/planning/features/mail-d20bcb1654f2bb82d4d973b1/spec.md)_
+_(no `## Kickoff` section — run `/design` or hand-edit /Users/miguelf/.copilot/copilot-worktrees/hero/miguelfv-hpeprod-turbo-telegram/.hero/planning/features/mail-d20bcb1654f2bb82d4d973b1/spec.md)_
 
 ---
 
@@ -444,14 +481,14 @@ capture-then-edit), capture auto / promote manual.
 ## hihcp-fuzzy-path-resolution — "Add Workspace-Relative Path Fuzzy Resolution"
 _feature · planning · horizon: now_
 
-_(no `## Kickoff` section — run `/design` or hand-edit /private/tmp/hero-mail-main.PaKrG3/.hero/planning/features/hihcp-fuzzy-path-resolution/spec.md)_
+_(no `## Kickoff` section — run `/design` or hand-edit /Users/miguelf/.copilot/copilot-worktrees/hero/miguelfv-hpeprod-turbo-telegram/.hero/planning/features/hihcp-fuzzy-path-resolution/spec.md)_
 
 ---
 
 ## hero-search-tiered-response — hero search response tiering — max_results + pagination instead of compact boolean
 _feature · planning · horizon: now_
 
-_(no `## Kickoff` section — run `/design` or hand-edit /private/tmp/hero-mail-main.PaKrG3/.hero/planning/features/hero-search-tiered-response/spec.md)_
+_(no `## Kickoff` section — run `/design` or hand-edit /Users/miguelf/.copilot/copilot-worktrees/hero/miguelfv-hpeprod-turbo-telegram/.hero/planning/features/hero-search-tiered-response/spec.md)_
 
 ---
 
@@ -510,14 +547,14 @@ _feature · planning · horizon: now_
 ## agent-safety-conventions — "Agent Safety Conventions — Harness-Agnostic Behavioral Guardrails"
 _feature · planning · horizon: now_
 
-_(no `## Kickoff` section — run `/design` or hand-edit /private/tmp/hero-mail-main.PaKrG3/.hero/planning/features/agent-safety-conventions/spec.md)_
+_(no `## Kickoff` section — run `/design` or hand-edit /Users/miguelf/.copilot/copilot-worktrees/hero/miguelfv-hpeprod-turbo-telegram/.hero/planning/features/agent-safety-conventions/spec.md)_
 
 ---
 
 ## tracker-semantic-priority-field-mapping — "\"Jira custom field cannot be configured as canonical Hero priority\""
 _bug · planning · horizon: now_
 
-_(no `## Kickoff` section — run `/design` or hand-edit /private/tmp/hero-mail-main.PaKrG3/.hero/planning/bugs/tracker-semantic-priority-field-mapping/spec.md)_
+_(no `## Kickoff` section — run `/design` or hand-edit /Users/miguelf/.copilot/copilot-worktrees/hero/miguelfv-hpeprod-turbo-telegram/.hero/planning/bugs/tracker-semantic-priority-field-mapping/spec.md)_
 
 ---
 
@@ -672,21 +709,21 @@ data through CLI commands, MCP tools, and the `hero prime` context pipeline.
 ## spec-prioritization — Spec Prioritization — Now / Next / Someday / Parking-Lot
 _feature · planning · horizon: next_
 
-_(no `## Kickoff` section — run `/design` or hand-edit /private/tmp/hero-mail-main.PaKrG3/.hero/planning/features/spec-prioritization/spec.md)_
+_(no `## Kickoff` section — run `/design` or hand-edit /Users/miguelf/.copilot/copilot-worktrees/hero/miguelfv-hpeprod-turbo-telegram/.hero/planning/features/spec-prioritization/spec.md)_
 
 ---
 
 ## project-charter — Project Charter — Mission, Principles, and Auto-Injection
 _feature · planning · horizon: next_
 
-_(no `## Kickoff` section — run `/design` or hand-edit /private/tmp/hero-mail-main.PaKrG3/.hero/planning/features/project-charter/spec.md)_
+_(no `## Kickoff` section — run `/design` or hand-edit /Users/miguelf/.copilot/copilot-worktrees/hero/miguelfv-hpeprod-turbo-telegram/.hero/planning/features/project-charter/spec.md)_
 
 ---
 
 ## lean-agent-profile — Lean Agent Profile — Opt-In Trim for Top-Tier Models
 _feature · planning · horizon: next_
 
-_(no `## Kickoff` section — run `/design` or hand-edit /private/tmp/hero-mail-main.PaKrG3/.hero/planning/features/lean-agent-profile/spec.md)_
+_(no `## Kickoff` section — run `/design` or hand-edit /Users/miguelf/.copilot/copilot-worktrees/hero/miguelfv-hpeprod-turbo-telegram/.hero/planning/features/lean-agent-profile/spec.md)_
 
 ---
 
@@ -716,7 +753,7 @@ Adds a HashiCorp-style comparison section that helps readers honestly choose bet
 ## hero-runner — Hero Runner — Headless Agent Execution via Claude API
 _feature · planning · horizon: next_
 
-_(no `## Kickoff` section — run `/design` or hand-edit /private/tmp/hero-mail-main.PaKrG3/.hero/planning/features/hero-runner/spec.md)_
+_(no `## Kickoff` section — run `/design` or hand-edit /Users/miguelf/.copilot/copilot-worktrees/hero/miguelfv-hpeprod-turbo-telegram/.hero/planning/features/hero-runner/spec.md)_
 
 ---
 
@@ -739,28 +776,28 @@ Second non-engineering Hero domain pack: QA. The thesis: **Hero QA is the qualit
 ## graph-memory — Graph Memory — Unified Substrate for Hero's Knowledge Corpus
 _feature · planning · horizon: next_
 
-_(no `## Kickoff` section — run `/design` or hand-edit /private/tmp/hero-mail-main.PaKrG3/.hero/planning/features/graph-memory/spec.md)_
+_(no `## Kickoff` section — run `/design` or hand-edit /Users/miguelf/.copilot/copilot-worktrees/hero/miguelfv-hpeprod-turbo-telegram/.hero/planning/features/graph-memory/spec.md)_
 
 ---
 
 ## graph-memory-federation — Graph Memory Federation — Multi-Repo, Multi-Team, Cross-Unit Topology
 _feature · planning · horizon: next_
 
-_(no `## Kickoff` section — run `/design` or hand-edit /private/tmp/hero-mail-main.PaKrG3/.hero/planning/features/graph-memory-federation/spec.md)_
+_(no `## Kickoff` section — run `/design` or hand-edit /Users/miguelf/.copilot/copilot-worktrees/hero/miguelfv-hpeprod-turbo-telegram/.hero/planning/features/graph-memory-federation/spec.md)_
 
 ---
 
 ## graph-memory-7c-live-test — Graph Memory Phase 7c — Live Multi-Dev Sync Test
 _feature · planning · horizon: next_
 
-_(no `## Kickoff` section — run `/design` or hand-edit /private/tmp/hero-mail-main.PaKrG3/.hero/planning/features/graph-memory-7c-live-test/spec.md)_
+_(no `## Kickoff` section — run `/design` or hand-edit /Users/miguelf/.copilot/copilot-worktrees/hero/miguelfv-hpeprod-turbo-telegram/.hero/planning/features/graph-memory-7c-live-test/spec.md)_
 
 ---
 
 ## e2e-onboarding — E2E Onboarding Suite — Fresh Repo to Productive Workspace
 _feature · planning · horizon: next_
 
-_(no `## Kickoff` section — run `/design` or hand-edit /private/tmp/hero-mail-main.PaKrG3/.hero/planning/features/e2e-onboarding/spec.md)_
+_(no `## Kickoff` section — run `/design` or hand-edit /Users/miguelf/.copilot/copilot-worktrees/hero/miguelfv-hpeprod-turbo-telegram/.hero/planning/features/e2e-onboarding/spec.md)_
 
 ---
 
@@ -780,63 +817,63 @@ dogfooding the polished core before we deploy.
 ## hero-telemetry — Hero Telemetry — Opt-In Usage Analytics + Feedback Channel
 _feature · planning · horizon: someday_
 
-_(no `## Kickoff` section — run `/design` or hand-edit /private/tmp/hero-mail-main.PaKrG3/.hero/planning/features/hero-telemetry/spec.md)_
+_(no `## Kickoff` section — run `/design` or hand-edit /Users/miguelf/.copilot/copilot-worktrees/hero/miguelfv-hpeprod-turbo-telegram/.hero/planning/features/hero-telemetry/spec.md)_
 
 ---
 
 ## hero-docs-site — Hero Docs Site — Public, Searchable, Self-Serve Reference
 _feature · planning · horizon: someday_
 
-_(no `## Kickoff` section — run `/design` or hand-edit /private/tmp/hero-mail-main.PaKrG3/.hero/planning/features/hero-docs-site/spec.md)_
+_(no `## Kickoff` section — run `/design` or hand-edit /Users/miguelf/.copilot/copilot-worktrees/hero/miguelfv-hpeprod-turbo-telegram/.hero/planning/features/hero-docs-site/spec.md)_
 
 ---
 
 ## hero-distribution — Hero Distribution — Homebrew, Install Script, GitHub Releases
 _feature · planning · horizon: someday_
 
-_(no `## Kickoff` section — run `/design` or hand-edit /private/tmp/hero-mail-main.PaKrG3/.hero/planning/features/hero-distribution/spec.md)_
+_(no `## Kickoff` section — run `/design` or hand-edit /Users/miguelf/.copilot/copilot-worktrees/hero/miguelfv-hpeprod-turbo-telegram/.hero/planning/features/hero-distribution/spec.md)_
 
 ---
 
 ## hero-demo-content — Hero Interactive Install Terminal Demo
 _feature · planning · horizon: someday_
 
-_(no `## Kickoff` section — run `/design` or hand-edit /private/tmp/hero-mail-main.PaKrG3/.hero/planning/features/hero-demo-content/spec.md)_
+_(no `## Kickoff` section — run `/design` or hand-edit /Users/miguelf/.copilot/copilot-worktrees/hero/miguelfv-hpeprod-turbo-telegram/.hero/planning/features/hero-demo-content/spec.md)_
 
 ---
 
 ## hero-community — Hero Community — Discord/Discussions, Contributor Guide, Issue Templates
 _feature · planning · horizon: someday_
 
-_(no `## Kickoff` section — run `/design` or hand-edit /private/tmp/hero-mail-main.PaKrG3/.hero/planning/features/hero-community/spec.md)_
+_(no `## Kickoff` section — run `/design` or hand-edit /Users/miguelf/.copilot/copilot-worktrees/hero/miguelfv-hpeprod-turbo-telegram/.hero/planning/features/hero-community/spec.md)_
 
 ---
 
 ## configurable-workspace-location — Configurable Workspace Location — Hero Dir Anywhere
 _feature · planning · horizon: someday_
 
-_(no `## Kickoff` section — run `/design` or hand-edit /private/tmp/hero-mail-main.PaKrG3/.hero/planning/features/configurable-workspace-location/spec.md)_
+_(no `## Kickoff` section — run `/design` or hand-edit /Users/miguelf/.copilot/copilot-worktrees/hero/miguelfv-hpeprod-turbo-telegram/.hero/planning/features/configurable-workspace-location/spec.md)_
 
 ---
 
 ## multi-domain-core — "Multi-Domain Core Engine"
 _feature · draft · horizon: next_
 
-_(no `## Kickoff` section — run `/design` or hand-edit /private/tmp/hero-mail-main.PaKrG3/.hero/planning/features/multi-domain-core/spec.md)_
+_(no `## Kickoff` section — run `/design` or hand-edit /Users/miguelf/.copilot/copilot-worktrees/hero/miguelfv-hpeprod-turbo-telegram/.hero/planning/features/multi-domain-core/spec.md)_
 
 ---
 
 ## greenfield-scaffolding — "Greenfield Scaffolding"
 _feature · draft · horizon: next_
 
-_(no `## Kickoff` section — run `/design` or hand-edit /private/tmp/hero-mail-main.PaKrG3/.hero/planning/features/greenfield-scaffolding/spec.md)_
+_(no `## Kickoff` section — run `/design` or hand-edit /Users/miguelf/.copilot/copilot-worktrees/hero/miguelfv-hpeprod-turbo-telegram/.hero/planning/features/greenfield-scaffolding/spec.md)_
 
 ---
 
 ## cross-spec-awareness — "Cross-Spec Awareness"
 _feature · draft · horizon: next_
 
-_(no `## Kickoff` section — run `/design` or hand-edit /private/tmp/hero-mail-main.PaKrG3/.hero/planning/features/cross-spec-awareness/spec.md)_
+_(no `## Kickoff` section — run `/design` or hand-edit /Users/miguelf/.copilot/copilot-worktrees/hero/miguelfv-hpeprod-turbo-telegram/.hero/planning/features/cross-spec-awareness/spec.md)_
 
 ---
 
@@ -866,7 +903,7 @@ The deliverable is reviewable in two cuts: (a) the seam + direct backend (smalle
 ## architectural-drift-detection — "Architectural Drift Detection"
 _feature · draft · horizon: next_
 
-_(no `## Kickoff` section — run `/design` or hand-edit /private/tmp/hero-mail-main.PaKrG3/.hero/planning/features/architectural-drift-detection/spec.md)_
+_(no `## Kickoff` section — run `/design` or hand-edit /Users/miguelf/.copilot/copilot-worktrees/hero/miguelfv-hpeprod-turbo-telegram/.hero/planning/features/architectural-drift-detection/spec.md)_
 
 ---
 
@@ -925,28 +962,28 @@ then the dispatch intercept and registry wiring. Three files, one new
 ## hihcp-rgignore — "Add .rgignore to hero-code Repo"
 _bug · handed_off · horizon: now_
 
-_(no `## Kickoff` section — run `/design` or hand-edit /private/tmp/hero-mail-main.PaKrG3/.hero/planning/bugs/hihcp-rgignore/spec.md)_
+_(no `## Kickoff` section — run `/design` or hand-edit /Users/miguelf/.copilot/copilot-worktrees/hero/miguelfv-hpeprod-turbo-telegram/.hero/planning/bugs/hihcp-rgignore/spec.md)_
 
 ---
 
 ## hihcp-permission-bridge-validation — "Harden Permission Bridge Payload Validation"
 _bug · handed_off · horizon: now_
 
-_(no `## Kickoff` section — run `/design` or hand-edit /private/tmp/hero-mail-main.PaKrG3/.hero/planning/bugs/hihcp-permission-bridge-validation/spec.md)_
+_(no `## Kickoff` section — run `/design` or hand-edit /Users/miguelf/.copilot/copilot-worktrees/hero/miguelfv-hpeprod-turbo-telegram/.hero/planning/bugs/hihcp-permission-bridge-validation/spec.md)_
 
 ---
 
 ## hihcp-mcp-first-turn-readiness — "Gate First Turn on Hero MCP Readiness"
 _bug · handed_off · horizon: now_
 
-_(no `## Kickoff` section — run `/design` or hand-edit /private/tmp/hero-mail-main.PaKrG3/.hero/planning/bugs/hihcp-mcp-first-turn-readiness/spec.md)_
+_(no `## Kickoff` section — run `/design` or hand-edit /Users/miguelf/.copilot/copilot-worktrees/hero/miguelfv-hpeprod-turbo-telegram/.hero/planning/bugs/hihcp-mcp-first-turn-readiness/spec.md)_
 
 ---
 
 ## hihcp-mcp-auto-reconnect — "Auto-Recover from MCP Server Disconnect Mid-Session"
 _bug · handed_off · horizon: now_
 
-_(no `## Kickoff` section — run `/design` or hand-edit /private/tmp/hero-mail-main.PaKrG3/.hero/planning/bugs/hihcp-mcp-auto-reconnect/spec.md)_
+_(no `## Kickoff` section — run `/design` or hand-edit /Users/miguelf/.copilot/copilot-worktrees/hero/miguelfv-hpeprod-turbo-telegram/.hero/planning/bugs/hihcp-mcp-auto-reconnect/spec.md)_
 
 ---
 
