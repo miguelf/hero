@@ -67,11 +67,11 @@ func cleanupCopilotLegacy(opts Options) error {
 	_ = os.Remove(legacyBase)
 	st, err := ReadInstallState(opts.TargetDir)
 	if err != nil || st == nil {
-		return nil
+		st = nil
 	}
-	prior, ok := st.Targets[string(TargetCopilot)]
-	if !ok {
-		return nil
+	var prior TargetState
+	if st != nil {
+		prior = st.Targets[string(TargetCopilot)]
 	}
 	for _, rel := range prior.Files {
 		rel = filepath.ToSlash(rel)
@@ -91,6 +91,61 @@ func cleanupCopilotLegacy(opts Options) error {
 		}
 		fmt.Fprintf(os.Stderr, "  cleanup %s (removed legacy Copilot output)\n", full)
 		_ = os.Remove(filepath.Dir(full))
+	}
+	return cleanupCopilotLegacyPrompts(opts)
+}
+
+// cleanupCopilotLegacyPrompts migrates prompt files from installs that
+// predate the file manifest. Only names that exist in the current canonical
+// content source are eligible; unrelated prompt files remain user-owned.
+func cleanupCopilotLegacyPrompts(opts Options) error {
+	srcFS := opts.sourceFS()
+	if srcFS == nil {
+		return nil
+	}
+	domain := opts.Domain
+	if domain == "" {
+		domain = "engineering"
+	}
+	agents, err := selectFlatContent(srcFS, "agents", domain)
+	if err != nil {
+		return err
+	}
+	commands, err := selectFlatContent(srcFS, "commands", domain)
+	if err != nil {
+		return err
+	}
+	known := make(map[string]bool, len(agents)+len(commands))
+	for _, name := range append(agents, commands...) {
+		known[name] = true
+	}
+	for _, kind := range []string{"agents", "commands"} {
+		dir := filepath.Join(opts.TargetDir, ".github", "prompts", kind)
+		entries, readErr := os.ReadDir(dir)
+		if os.IsNotExist(readErr) {
+			continue
+		}
+		if readErr != nil {
+			return readErr
+		}
+		for _, entry := range entries {
+			if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".prompt.md") {
+				continue
+			}
+			sourceName := strings.TrimSuffix(entry.Name(), ".prompt.md") + ".md"
+			if !known[sourceName] {
+				continue
+			}
+			path := filepath.Join(dir, entry.Name())
+			if opts.DryRun {
+				fmt.Fprintf(os.Stderr, "  cleanup %s (would remove legacy Copilot output)\n", path)
+				continue
+			}
+			if err := os.Remove(path); err != nil {
+				return err
+			}
+			fmt.Fprintf(os.Stderr, "  cleanup %s (removed legacy Copilot output)\n", path)
+		}
 	}
 	return nil
 }
