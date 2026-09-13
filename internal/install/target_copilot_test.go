@@ -38,6 +38,9 @@ func TestCopilotCommandSkillWinsReferenceCollision(t *testing.T) {
 	if !strings.Contains(string(command), "user-invocable: true") || !strings.Contains(string(command), "Run the workflow.") {
 		t.Fatalf("command skill did not win collision: %s", command)
 	}
+	if !strings.Contains(string(command), "read `references/design/SKILL.md`") {
+		t.Fatalf("command skill does not load its preserved reference: %s", command)
+	}
 	if !strings.Contains(string(reference), "user-invocable: false") || !strings.Contains(string(reference), "Reference guidance.") {
 		t.Fatalf("reference skill was not preserved as disabled nested instructions: %s", reference)
 	}
