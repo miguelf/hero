@@ -93,6 +93,33 @@ func TestMigration_CopilotLegacyLayoutCleanup(t *testing.T) {
 	h.mustBeRegularFile(".github/skills/spec-format/SKILL.md")
 }
 
+func TestMigration_CopilotLegacyPromptLayoutCleanupWithoutManifest(t *testing.T) {
+	h := newInstallHarness(t)
+	legacyAgent := filepath.Join(h.TargetDir, ".github", "prompts", "agents", "engineer.prompt.md")
+	legacyCommand := filepath.Join(h.TargetDir, ".github", "prompts", "commands", "design.prompt.md")
+	userPrompt := filepath.Join(h.TargetDir, ".github", "prompts", "commands", "my-custom.prompt.md")
+	mustMirrorCanonical(t, h, "agents/engineer.md", legacyAgent)
+	mustMirrorCanonical(t, h, "commands/design.md", legacyCommand)
+	if err := os.MkdirAll(filepath.Dir(userPrompt), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(userPrompt, []byte("user-authored\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	h.Run(TargetCopilot, nil)
+
+	if _, err := os.Stat(legacyAgent); !os.IsNotExist(err) {
+		t.Errorf("legacy agent prompt should be cleaned up, err=%v", err)
+	}
+	if _, err := os.Stat(legacyCommand); !os.IsNotExist(err) {
+		t.Errorf("legacy command prompt should be cleaned up, err=%v", err)
+	}
+	if got, err := os.ReadFile(userPrompt); err != nil || string(got) != "user-authored\n" {
+		t.Errorf("custom prompt changed: %q, %v", got, err)
+	}
+}
+
 // mustMirrorCanonical writes srcPath (read from the harness's source
 // FS) verbatim to dst. Used to seed legacy install fixtures with
 // content that matches canonical bytes — so the cleanup logic
