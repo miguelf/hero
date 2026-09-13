@@ -47,8 +47,8 @@ type HarnessContract struct {
 	FilenameRequired string
 
 	// FilenameSuffix, when set, requires the filename to end with the
-	// given suffix (e.g. ".toml" for Codex agents, ".prompt.md" for
-	// Copilot prompts). Mutually exclusive with FilenameRequired.
+	// given suffix (e.g. ".toml" for Codex agents, ".agent.md" for
+	// Copilot agents). Mutually exclusive with FilenameRequired.
 	FilenameSuffix string
 
 	// ContentValidator, when set, runs against the file's full bytes
@@ -137,23 +137,24 @@ var targetContracts = map[Target]map[ContentKind]HarnessContract{
 		},
 	},
 
-	// Copilot reads SKILL.md for skills, .prompt.md for user-invoked
-	// prompts (Hero installs both agents and commands as prompts,
-	// subdir-namespaced). Single instructions file is a separate
-	// concern handled by installInstructionsMd.
+	// Copilot reads native agent files and SKILL.md directories. Commands
+	// are user-invocable skills; reference skills are background skills.
 	// Source: github.com/microsoft/vscode-copilot-chat
 	//         src/platform/customInstructions/common/promptTypes.ts
 	TargetCopilot: {
 		KindAgents: {
 			Format:         FormatYAMLFrontmatter,
-			FilenameSuffix: ".prompt.md",
+			RequiredFields: []string{"name", "description"},
+			FilenameSuffix: ".agent.md",
 		},
 		KindCommands: {
-			Format:         FormatYAMLFrontmatter,
-			FilenameSuffix: ".prompt.md",
+			Format:           FormatYAMLFrontmatter,
+			RequiredFields:   []string{"name", "description", "user-invocable"},
+			FilenameRequired: "SKILL.md",
 		},
 		KindSkills: {
 			Format:           FormatYAMLFrontmatter,
+			RequiredFields:   []string{"name", "description", "user-invocable"},
 			FilenameRequired: "SKILL.md",
 		},
 	},

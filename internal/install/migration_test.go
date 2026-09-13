@@ -55,8 +55,8 @@ func TestMigration_CodexLegacyLayoutCleanup(t *testing.T) {
 
 // TestMigration_CopilotLegacyLayoutCleanup simulates the pre-fix
 // Copilot install (.github/copilot/{agents,commands,skills}/) and
-// asserts those dead-byte locations get cleaned up; new
-// .github/prompts/ + .github/skills/ paths land instead.
+// asserts those dead-byte locations get cleaned up; modern native
+// .github/agents + .github/skills paths land instead.
 func TestMigration_CopilotLegacyLayoutCleanup(t *testing.T) {
 	h := newInstallHarness(t)
 	if err := os.MkdirAll(filepath.Join(h.TargetDir, ".hero"), 0o755); err != nil {
@@ -88,8 +88,8 @@ func TestMigration_CopilotLegacyLayoutCleanup(t *testing.T) {
 	}
 
 	// New paths land instead.
-	h.mustBeRegularFile(".github/prompts/agents/engineer.prompt.md")
-	h.mustBeRegularFile(".github/prompts/commands/design.prompt.md")
+	h.mustBeRegularFile(".github/agents/engineer.agent.md")
+	h.mustBeRegularFile(".github/skills/design/SKILL.md")
 	h.mustBeRegularFile(".github/skills/spec-format/SKILL.md")
 }
 

@@ -87,7 +87,10 @@ func composedInstalledPath(target Target, kind, name string) string {
 	case TargetCursor:
 		return filepath.Join(".cursor", "rules", kind+"s", name+".md")
 	case TargetCopilot:
-		return filepath.Join(".github", "prompts", kind+"s", name+".prompt.md")
+		if kind == "agent" {
+			return filepath.Join(".github", "agents", name+".agent.md")
+		}
+		return filepath.Join(".github", "skills", name, "SKILL.md")
 	case TargetCodex:
 		if kind == "agent" {
 			return filepath.Join(".codex", "agents", name+".toml")

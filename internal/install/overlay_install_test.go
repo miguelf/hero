@@ -106,10 +106,10 @@ func TestOverlay_AllTargetsIncludeCoreAndDomain(t *testing.T) {
 		},
 		{
 			target:          TargetCopilot,
-			coreAgentAt:     ".github/prompts/agents/session-primer.prompt.md",
-			domainAgentAt:   ".github/prompts/agents/prd-author.prompt.md",
+			coreAgentAt:     ".github/agents/session-primer.agent.md",
+			domainAgentAt:   ".github/agents/prd-author.agent.md",
 			domainSkillAt:   ".github/skills/pm-agent-doctrine/SKILL.md",
-			domainCommandAt: ".github/prompts/commands/prd.prompt.md",
+			domainCommandAt: ".github/skills/prd/SKILL.md",
 		},
 		{
 			target:          TargetGrok,

@@ -130,11 +130,10 @@ func TestHarness_SmokeCodex(t *testing.T) {
 }
 
 // TestHarness_SmokeCopilot covers the corrected Copilot install layout:
-//   - Agents render as .prompt.md under .github/prompts/agents/
-//   - Commands render as .prompt.md under .github/prompts/commands/
-//   - Skills land at .github/skills/<n>/SKILL.md (Copilot's recognized
-//     skill folder; .github/copilot/skills/ was never read)
-//   - .github/copilot/{agents,commands,skills}/ MUST be absent
+//   - Agents render as .agent.md under .github/agents/
+//   - Commands render as user-invocable skills under .github/skills/
+//   - Reference skills land at .github/skills/<n>/SKILL.md
+//   - Legacy prompt and .github/copilot trees are not created
 //   - .github/copilot-instructions.md is the workspace instruction file
 func TestHarness_SmokeCopilot(t *testing.T) {
 	h := newInstallHarness(t)
@@ -144,15 +143,14 @@ func TestHarness_SmokeCopilot(t *testing.T) {
 	res := h.Run(TargetCopilot, nil)
 
 	// New paths Copilot actually reads.
-	h.mustBeRegularFile(".github/prompts/agents/engineer.prompt.md")
-	h.mustBeRegularFile(".github/prompts/commands/design.prompt.md")
+	h.mustBeRegularFile(".github/agents/engineer.agent.md")
+	h.mustBeRegularFile(".github/skills/design/SKILL.md")
 	h.mustBeRegularFile(".github/skills/spec-format/SKILL.md")
 	h.mustBeRegularFile(".github/copilot-instructions.md")
 
 	// Old dead-bytes locations must NOT be installed.
-	h.mustNotExist(".github/copilot/agents")
-	h.mustNotExist(".github/copilot/commands")
-	h.mustNotExist(".github/copilot/skills")
+	h.mustNotExist(".github/prompts/agents")
+	h.mustNotExist(".github/prompts/commands")
 
 	if len(res.Copied) == 0 {
 		t.Error("expected Run to record copied files")
@@ -188,7 +186,7 @@ func TestHarness_DesignClosingUsesProgressiveACDisclosureForAllTargets(t *testin
 		{"opencode", TargetOpenCode, ".opencode/commands/design.md"},
 		{"cursor", TargetCursor, ".cursor/rules/commands/design.md"},
 		{"claude", TargetClaude, ".claude/commands/design.md"},
-		{"copilot", TargetCopilot, ".github/prompts/commands/design.prompt.md"},
+		{"copilot", TargetCopilot, ".github/skills/design/SKILL.md"},
 		{"codex", TargetCodex, ".agents/skills/command-design/SKILL.md"},
 		{"generic", TargetGeneric, ".ai/commands/design.md"},
 		{"grok", TargetGrok, ".grok/skills/command-design/SKILL.md"},
@@ -221,7 +219,7 @@ func TestHarness_DiagnosePullsCredentialSafeTrackerDescriptionForAllTargets(t *t
 		{"opencode", TargetOpenCode, ".opencode/commands/diagnose.md"},
 		{"cursor", TargetCursor, ".cursor/rules/commands/diagnose.md"},
 		{"claude", TargetClaude, ".claude/commands/diagnose.md"},
-		{"copilot", TargetCopilot, ".github/prompts/commands/diagnose.prompt.md"},
+		{"copilot", TargetCopilot, ".github/skills/diagnose/SKILL.md"},
 		{"codex", TargetCodex, ".agents/skills/command-diagnose/SKILL.md"},
 		{"generic", TargetGeneric, ".ai/commands/diagnose.md"},
 		{"grok", TargetGrok, ".grok/skills/command-diagnose/SKILL.md"},

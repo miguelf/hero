@@ -121,10 +121,12 @@ func buildTargetInventory(t Target, projectRoot string, m ContentManifest) Targe
 type countMode int
 
 const (
-	countFlatMD       countMode = iota // *.md files, directory READMEs excluded
-	countFlatTOML                      // *.toml files (codex agents)
-	countFlatPromptMD                  // *.prompt.md files (copilot agents/commands)
-	countNestedSkill                   // <name>/SKILL.md directories
+	countFlatMD                countMode = iota // *.md files, directory READMEs excluded
+	countFlatTOML                               // *.toml files (codex agents)
+	countFlatPromptMD                           // *.prompt.md files (copilot agents/commands)
+	countNestedSkill                            // <name>/SKILL.md directories
+	countCopilotInvocableSkill                  // top-level Copilot skills with user-invocable=true
+	countCopilotReferenceSkill                  // top-level Copilot skills with user-invocable=false
 )
 
 // kindPath pairs a destination directory with how to count its content. A
@@ -164,10 +166,9 @@ func targetInstallPaths(t Target, root string) (agents, commands, skills kindPat
 			kindPath{},
 			kindPath{filepath.Join(root, ".agents", "skills"), countNestedSkill}
 	case TargetCopilot:
-		prompts := filepath.Join(root, ".github", "prompts")
-		return kindPath{filepath.Join(prompts, "agents"), countFlatPromptMD},
-			kindPath{filepath.Join(prompts, "commands"), countFlatPromptMD},
-			kindPath{filepath.Join(root, ".github", "skills"), countNestedSkill}
+		return kindPath{filepath.Join(root, ".github", "agents"), countFlatMD},
+			kindPath{filepath.Join(root, ".github", "skills"), countCopilotInvocableSkill},
+			kindPath{filepath.Join(root, ".github", "skills"), countCopilotReferenceSkill}
 	case TargetGeneric:
 		base := filepath.Join(root, ".ai")
 		return kindPath{filepath.Join(base, "agents"), countFlatMD},
@@ -190,6 +191,28 @@ func countInstalled(kp kindPath) int {
 	}
 	if kp.mode == countNestedSkill {
 		return countNestedSkillDirs(kp.dir)
+	}
+	if kp.mode == countCopilotInvocableSkill || kp.mode == countCopilotReferenceSkill {
+		entries, err := os.ReadDir(kp.dir)
+		if err != nil {
+			return 0
+		}
+		want := kp.mode == countCopilotInvocableSkill
+		count := 0
+		for _, e := range entries {
+			if !e.IsDir() {
+				continue
+			}
+			data, err := os.ReadFile(filepath.Join(kp.dir, e.Name(), "SKILL.md"))
+			if err != nil {
+				continue
+			}
+			fm, _ := parseSimpleFrontmatter(data)
+			if strings.EqualFold(fm["user-invocable"], fmt.Sprintf("%t", want)) {
+				count++
+			}
+		}
+		return count
 	}
 	entries, err := os.ReadDir(kp.dir)
 	if err != nil {

@@ -15,8 +15,8 @@ import (
 // Install targets write the canonical agents/commands/skills tree into
 // each harness's own directory — nothing is symlinked. Most targets
 // share the file format Hero authors, so the write is a plain copy.
-// Codex agents (TOML) and Copilot agents/commands (.prompt.md) are
-// exceptions: the consuming format genuinely differs from canonical
+// Codex agents (TOML) and Copilot agents/skills are exceptions: the
+// consuming format genuinely differs from canonical
 // markdown. This file provides the small helpers those targets use to
 // render the differing shape.
 //
@@ -72,7 +72,7 @@ func renderToFile(opts Options, result *Result, kind, destDir string, fn func(ca
 			continue // renderer chose to skip this entry
 		}
 		dst := filepath.Join(destDir, destName)
-		// Record flat rendered files (Codex .toml, Copilot .prompt.md) in
+		// Record flat rendered files (Codex .toml, Copilot agents) in
 		// the file-prune manifest, in both the DryRun and write branches so
 		// --dry-run reporting sees the full set. Skip destNames that carry a
 		// path separator — Codex renders commands-as-skills at
@@ -221,10 +221,8 @@ func commandAsSkillRenderer(harnessLabel string) func(canonicalEntry) (string, [
 	}
 }
 
-// renderCopilotPromptFile emits a Copilot .prompt.md file from a
-// canonical agent or command markdown entry. Copilot prompt files are
-// markdown with optional YAML frontmatter; the renderer writes a
-// minimal frontmatter (description only) plus the canonical body.
+// renderCopilotPromptFile is retained for older renderer callers. Modern
+// Copilot installs use renderCopilotAgentFile and renderCopilotSkill.
 //
 // Returns destination filename ("<entry.Name>.prompt.md") and bytes.
 func renderCopilotPromptFile(entry canonicalEntry) (string, []byte, error) {
@@ -241,4 +239,48 @@ func renderCopilotPromptFile(entry canonicalEntry) (string, []byte, error) {
 		out.WriteString("\n")
 	}
 	return entry.Name + ".prompt.md", out.Bytes(), nil
+}
+
+func renderCopilotAgentFile(entry canonicalEntry) (string, []byte, error) {
+	name := entry.Frontmatter["name"]
+	if name == "" {
+		name = entry.Name
+	}
+	desc := entry.Frontmatter["description"]
+	var out bytes.Buffer
+	out.WriteString("---\n")
+	fmt.Fprintf(&out, "name: %s\n", name)
+	if desc != "" {
+		fmt.Fprintf(&out, "description: %s\n", desc)
+	}
+	out.WriteString("---\n\n")
+	out.Write(bytes.TrimLeft(entry.Body, "\n"))
+	if out.Len() > 0 && out.Bytes()[out.Len()-1] != '\n' {
+		out.WriteByte('\n')
+	}
+	return entry.Name + ".agent.md", out.Bytes(), nil
+}
+
+func renderCopilotSkill(entry canonicalEntry, userInvocable bool) []byte {
+	name := entry.Frontmatter["name"]
+	if name == "" {
+		name = entry.Name
+	}
+	desc := entry.Frontmatter["description"]
+	var out bytes.Buffer
+	out.WriteString("---\n")
+	fmt.Fprintf(&out, "name: %s\n", name)
+	if desc != "" {
+		fmt.Fprintf(&out, "description: %s\n", desc)
+	}
+	fmt.Fprintf(&out, "user-invocable: %t\n", userInvocable)
+	if userInvocable {
+		out.WriteString("metadata:\n  purpose: command-workflow\n")
+	}
+	out.WriteString("---\n\n")
+	out.Write(bytes.TrimLeft(entry.Body, "\n"))
+	if out.Len() > 0 && out.Bytes()[out.Len()-1] != '\n' {
+		out.WriteByte('\n')
+	}
+	return out.Bytes()
 }

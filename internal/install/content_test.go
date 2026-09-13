@@ -90,7 +90,19 @@ Never create Focus directly. Only the user may accept Today, Later, or Do Next.
 			if err != nil {
 				t.Fatal(err)
 			}
-			if string(installed) != body {
+			expected := body
+			if tc.target == TargetCopilot {
+				_, expectedBody, ok := splitYAMLFrontmatter([]byte(body))
+				if !ok {
+					t.Fatal("canonical guidance missing frontmatter")
+				}
+				_, installedBody, ok := splitYAMLFrontmatter(installed)
+				if !ok || strings.TrimSpace(string(installedBody)) != strings.TrimSpace(string(expectedBody)) {
+					t.Fatalf("%s guidance drifted:\n%s", tc.target, installed)
+				}
+				expected = ""
+			}
+			if expected != "" && string(installed) != expected {
 				t.Fatalf("%s guidance drifted:\n%s", tc.target, installed)
 			}
 			for _, phrase := range []string{"advisory output, not Focus", "unfinished required steps", "hero_focus_suggest once", "Only the user may accept"} {

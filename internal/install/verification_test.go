@@ -63,8 +63,8 @@ func TestVerify_CodexAgentTomlParses(t *testing.T) {
 	}
 }
 
-// TestVerify_CopilotPromptYAMLParses confirms every rendered Copilot
-// .prompt.md file has parseable YAML frontmatter and a non-empty body.
+// TestVerify_CopilotYAMLParses confirms every rendered Copilot native file
+// has parseable YAML frontmatter and a non-empty body.
 func TestVerify_CopilotPromptYAMLParses(t *testing.T) {
 	h := newInstallHarness(t)
 	if err := os.MkdirAll(filepath.Join(h.TargetDir, ".hero"), 0o755); err != nil {
@@ -72,17 +72,20 @@ func TestVerify_CopilotPromptYAMLParses(t *testing.T) {
 	}
 	h.Run(TargetCopilot, nil)
 
-	for _, sub := range []string{"agents", "commands"} {
-		dir := filepath.Join(h.TargetDir, ".github", "prompts", sub)
+	for _, sub := range []string{"agents", "skills"} {
+		dir := filepath.Join(h.TargetDir, ".github", sub)
 		entries, err := os.ReadDir(dir)
 		if err != nil {
 			t.Fatalf("read %s: %v", dir, err)
 		}
 		for _, e := range entries {
-			if !strings.HasSuffix(e.Name(), ".prompt.md") {
+			file := filepath.Join(dir, e.Name())
+			if e.IsDir() {
+				file = filepath.Join(file, "SKILL.md")
+			} else if !strings.HasSuffix(e.Name(), ".agent.md") {
 				continue
 			}
-			data, err := os.ReadFile(filepath.Join(dir, e.Name()))
+			data, err := os.ReadFile(file)
 			if err != nil {
 				t.Errorf("read %s: %v", e.Name(), err)
 				continue
