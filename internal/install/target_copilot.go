@@ -181,14 +181,18 @@ func renderCopilotSkills(opts Options, result *Result) ([]string, error) {
 		if commandNames[skill.Name] {
 			continue // command wins the top-level collision
 		}
-		if err := writeCopilotSkill(opts, result, srcFS, skill.SourcePath, filepath.Join(dest, skill.Name, "SKILL.md"), false); err != nil {
+		if err := writeCopilotSkill(opts, result, srcFS, skill.SourcePath, filepath.Join(dest, skill.Name, "SKILL.md"), false, ""); err != nil {
 			return nil, err
 		}
 	}
 	for _, file := range commands {
 		name := strings.TrimSuffix(file, ".md")
 		dirs = append(dirs, name)
-		if err := writeCopilotSkill(opts, result, srcFS, "commands/"+file, filepath.Join(dest, name, "SKILL.md"), true); err != nil {
+		referencePath := ""
+		if containsSkillName(skills, name) {
+			referencePath = filepath.ToSlash(filepath.Join("references", name, "SKILL.md"))
+		}
+		if err := writeCopilotSkill(opts, result, srcFS, "commands/"+file, filepath.Join(dest, name, "SKILL.md"), true, referencePath); err != nil {
 			return nil, err
 		}
 		if !containsSkillName(skills, name) {
@@ -196,7 +200,7 @@ func renderCopilotSkills(opts Options, result *Result) ([]string, error) {
 		}
 		refPath := filepath.Join(dest, name, "references", name, "SKILL.md")
 		refSource := copilotSkillSource(skills, name)
-		if err := writeCopilotSkill(opts, result, srcFS, refSource, refPath, false); err != nil {
+		if err := writeCopilotSkill(opts, result, srcFS, refSource, refPath, false, ""); err != nil {
 			return nil, err
 		}
 	}
@@ -232,7 +236,7 @@ func uniqueStrings(values []string) []string {
 	return out
 }
 
-func writeCopilotSkill(opts Options, result *Result, srcFS fs.FS, srcPath, dst string, userInvocable bool) error {
+func writeCopilotSkill(opts Options, result *Result, srcFS fs.FS, srcPath, dst string, userInvocable bool, referencePath string) error {
 	raw, err := fs.ReadFile(srcFS, srcPath)
 	if err != nil {
 		return err
@@ -240,7 +244,7 @@ func writeCopilotSkill(opts Options, result *Result, srcFS fs.FS, srcPath, dst s
 	entry := canonicalEntry{SourcePath: srcPath, Raw: raw}
 	entry.Name = strings.TrimSuffix(filepath.Base(srcPath), ".md")
 	entry.Frontmatter, entry.Body = parseSimpleFrontmatter(raw)
-	rendered := renderCopilotSkill(entry, userInvocable)
+	rendered := renderCopilotSkill(entry, userInvocable, referencePath)
 	result.rendered = append(result.rendered, dst)
 	if opts.DryRun {
 		logRendered(opts, dst, "copilot skill")

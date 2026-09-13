@@ -261,7 +261,7 @@ func renderCopilotAgentFile(entry canonicalEntry) (string, []byte, error) {
 	return entry.Name + ".agent.md", out.Bytes(), nil
 }
 
-func renderCopilotSkill(entry canonicalEntry, userInvocable bool) []byte {
+func renderCopilotSkill(entry canonicalEntry, userInvocable bool, referencePath string) []byte {
 	name := entry.Frontmatter["name"]
 	if name == "" {
 		name = entry.Name
@@ -283,6 +283,9 @@ func renderCopilotSkill(entry canonicalEntry, userInvocable bool) []byte {
 	}
 	out.WriteString("---\n\n")
 	out.Write(bytes.TrimLeft(entry.Body, "\n"))
+	if referencePath != "" {
+		fmt.Fprintf(&out, "\n\nWhen this command needs the reference guidance, read `%s` before proceeding.\n", referencePath)
+	}
 	if out.Len() > 0 && out.Bytes()[out.Len()-1] != '\n' {
 		out.WriteByte('\n')
 	}
