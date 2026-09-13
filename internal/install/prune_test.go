@@ -288,7 +288,7 @@ type fileTgt struct {
 var fileTgts = []fileTgt{
 	{"claude", TargetClaude, func(s string) string { return filepath.Join(".claude", "agents", s+".md") }, "my-custom-agent.md", true},
 	{"codex", TargetCodex, func(s string) string { return filepath.Join(".codex", "agents", s+".toml") }, "my-custom-agent.toml", true},
-	{"copilot", TargetCopilot, func(s string) string { return filepath.Join(".github", "prompts", "agents", s+".prompt.md") }, "my-custom-agent.md", true},
+	{"copilot", TargetCopilot, func(s string) string { return filepath.Join(".github", "agents", s+".agent.md") }, "my-custom-agent.agent.md", true},
 	{"cursor", TargetCursor, func(s string) string { return filepath.Join(".cursor", "rules", "agents", s+".md") }, "my-custom-agent.md", true},
 	{"opencode", TargetOpenCode, func(s string) string { return filepath.Join(".opencode", "agents", s+".md") }, "my-custom-agent.md", true},
 	{"generic", TargetGeneric, func(s string) string { return filepath.Join(".ai", "agents", s+".md") }, "my-custom-agent.md", true},

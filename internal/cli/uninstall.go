@@ -261,8 +261,8 @@ func uninstallCodex(projectRoot string, versionInfo *version.Info) (int, int, er
 // than any other target (see internal/install/target_copilot.go):
 //
 //	.github/skills/<name>/SKILL.md          (nested skills)
-//	.github/prompts/agents/<name>.prompt.md
-//	.github/prompts/commands/<name>.prompt.md
+//	.github/agents/<name>.agent.md
+//	.github/skills/<name>/SKILL.md (commands and reference skills)
 //	.github/copilot-instructions.md         (Copilot-specific instructions)
 //	.github/copilot/{agents,commands,skills}/ (dead bytes from pre-prompt-file
 //	                                         installs; install cleans these too)
@@ -274,6 +274,7 @@ func uninstallCodex(projectRoot string, versionInfo *version.Info) (int, int, er
 func uninstallCopilot(projectRoot string, versionInfo *version.Info) (int, int, error) {
 	githubBase := filepath.Join(projectRoot, ".github")
 	dirs := []string{
+		filepath.Join(githubBase, "agents"),
 		filepath.Join(githubBase, "skills"),
 		filepath.Join(githubBase, "prompts", "agents"),
 		filepath.Join(githubBase, "prompts", "commands"),

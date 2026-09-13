@@ -48,9 +48,9 @@ func TestQAOverlay_AllTargetsRenderNativeCoreAndQASurfaces(t *testing.T) {
 		},
 		{
 			name: "copilot", target: TargetCopilot,
-			coreAgent: ".github/prompts/agents/session-primer.prompt.md", qaAgent: ".github/prompts/agents/qa-delivery-lead.prompt.md",
-			qaSkill: ".github/skills/risk-based-testing/SKILL.md", qaCommand: ".github/prompts/commands/author-cases.prompt.md",
-			engAgent: ".github/prompts/agents/feature-delivery-lead.prompt.md",
+			coreAgent: ".github/agents/session-primer.agent.md", qaAgent: ".github/agents/qa-delivery-lead.agent.md",
+			qaSkill: ".github/skills/risk-based-testing/SKILL.md", qaCommand: ".github/skills/author-cases/SKILL.md",
+			engAgent: ".github/agents/feature-delivery-lead.agent.md",
 		},
 		{
 			name: "grok", target: TargetGrok,
