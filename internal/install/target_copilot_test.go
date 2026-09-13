@@ -42,3 +42,29 @@ func TestCopilotCommandSkillWinsReferenceCollision(t *testing.T) {
 		t.Fatalf("reference skill was not preserved as disabled nested instructions: %s", reference)
 	}
 }
+
+func TestCopilotReferenceSkillPreservesMetadata(t *testing.T) {
+	source := t.TempDir()
+	target := t.TempDir()
+	path := filepath.Join(source, "skills", "agent-reliability", "SKILL.md")
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	body := "---\nname: agent-reliability\ndescription: Reliability rules.\nmetadata:\n  audience: all-agents\n  purpose: reliability-rules\n---\n\nReference guidance.\n"
+	if err := os.WriteFile(path, []byte(body), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Run(Options{SourceDir: source, Target: TargetCopilot, Mode: ModeProject, TargetDir: target, Force: true}); err != nil {
+		t.Fatal(err)
+	}
+	got, err := os.ReadFile(filepath.Join(target, ".github", "skills", "agent-reliability", "SKILL.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	text := string(got)
+	for _, want := range []string{"user-invocable: false", "audience: all-agents", "purpose: reliability-rules"} {
+		if !strings.Contains(text, want) {
+			t.Errorf("rendered skill missing %q:\n%s", want, text)
+		}
+	}
+}

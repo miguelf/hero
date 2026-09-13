@@ -273,8 +273,12 @@ func renderCopilotSkill(entry canonicalEntry, userInvocable bool) []byte {
 	if desc != "" {
 		fmt.Fprintf(&out, "description: %s\n", desc)
 	}
+	metadata := copilotMetadata(entry.Raw)
+	if metadata != "" {
+		out.WriteString(metadata)
+	}
 	fmt.Fprintf(&out, "user-invocable: %t\n", userInvocable)
-	if userInvocable {
+	if userInvocable && metadata == "" {
 		out.WriteString("metadata:\n  purpose: command-workflow\n")
 	}
 	out.WriteString("---\n\n")
@@ -283,4 +287,35 @@ func renderCopilotSkill(entry canonicalEntry, userInvocable bool) []byte {
 		out.WriteByte('\n')
 	}
 	return out.Bytes()
+}
+
+// copilotMetadata preserves the canonical skill's nested metadata block.
+// The block is copied verbatim because parseSimpleFrontmatter intentionally
+// handles only flat values and metadata may contain arbitrary YAML fields.
+func copilotMetadata(raw []byte) string {
+	s := string(raw)
+	if !strings.HasPrefix(s, "---\n") {
+		return ""
+	}
+	rest := s[len("---\n"):]
+	end := strings.Index(rest, "\n---")
+	if end < 0 {
+		return ""
+	}
+	lines := strings.Split(rest[:end], "\n")
+	for i, line := range lines {
+		if strings.TrimSpace(line) != "metadata:" {
+			continue
+		}
+		var block []string
+		block = append(block, line)
+		for _, nested := range lines[i+1:] {
+			if nested != "" && len(nested)-len(strings.TrimLeft(nested, " \t")) == 0 {
+				break
+			}
+			block = append(block, nested)
+		}
+		return strings.Join(block, "\n") + "\n"
+	}
+	return ""
 }
