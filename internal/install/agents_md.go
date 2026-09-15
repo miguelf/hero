@@ -59,39 +59,46 @@ func resolveAgentsMdPath(opts Options) string {
 	}
 }
 
-// nativeInstructionFile returns the base name of the root instruction file
-// a target natively reads. Claude Code reads CLAUDE.md; every other harness
-// (codex, opencode, cursor, copilot, generic, grok) reads AGENTS.md. This is the
-// single source of truth for the harness-native install mapping — no target
-// can silently miss coverage because each run<Target> routes through
-// installNativeInstructionFile, which consults this function.
+// nativeInstructionFile returns the project-relative instruction file a target
+// natively reads. This is the single source of truth for the harness-native
+// install mapping — no target can silently miss coverage because each
+// run<Target> routes through installNativeInstructionFile.
 func nativeInstructionFile(t Target) string {
-	if t == TargetClaude {
+	switch t {
+	case TargetClaude:
 		return "CLAUDE.md"
+	case TargetCopilot:
+		return filepath.Join(".github", "copilot-instructions.md")
+	default:
+		return "AGENTS.md"
 	}
-	return "AGENTS.md"
 }
 
 // installNativeInstructionFile writes Hero's managed block into the one root
 // instruction file the current target natively reads (per
-// nativeInstructionFile). Claude → CLAUDE.md (installClaudeMd semantics,
-// including --no-touch-claude-md and legacy-symlink cleanup); every other
-// target → AGENTS.md. Both files share the same managed body via
-// defaultSections, so a multi-target install with Claude produces byte-
-// identical managed regions in CLAUDE.md and AGENTS.md.
+// nativeInstructionFile). Claude → CLAUDE.md, Copilot →
+// .github/copilot-instructions.md, and the remaining targets → AGENTS.md.
 func installNativeInstructionFile(opts Options, result *Result) error {
-	if nativeInstructionFile(opts.Target) == "CLAUDE.md" {
+	switch opts.Target {
+	case TargetClaude:
 		_, claudeMdPath, err := resolveClaudePaths(opts)
 		if err != nil {
 			return err
 		}
 		return installClaudeMd(opts, result, claudeMdPath)
+	case TargetCopilot:
+		copilotMdPath, err := resolveCopilotPaths(opts)
+		if err != nil {
+			return err
+		}
+		return installCopilotMd(opts, result, copilotMdPath)
+	default:
+		agentsMdPath := resolveAgentsMdPath(opts)
+		if agentsMdPath == "" {
+			return nil
+		}
+		return installAgentsMd(opts, result, agentsMdPath)
 	}
-	agentsMdPath := resolveAgentsMdPath(opts)
-	if agentsMdPath == "" {
-		return nil
-	}
-	return installAgentsMd(opts, result, agentsMdPath)
 }
 
 // instructionFileIsHeroManagedOnly reports whether a root instruction file's

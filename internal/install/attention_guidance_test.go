@@ -18,7 +18,7 @@ func TestAttentionLifecycleGuidanceReachesAllHarnessNativeSurfaces(t *testing.T)
 		{"opencode", TargetOpenCode, "AGENTS.md", ".opencode/skills/attention-lifecycle-awareness/SKILL.md", ".opencode/commands/resume.md"},
 		{"cursor", TargetCursor, "AGENTS.md", ".cursor/rules/skills/attention-lifecycle-awareness.md", ".cursor/rules/commands/resume.md"},
 		{"claude", TargetClaude, "CLAUDE.md", ".claude/skills/attention-lifecycle-awareness/SKILL.md", ".claude/commands/resume.md"},
-		{"copilot", TargetCopilot, "AGENTS.md", ".github/skills/attention-lifecycle-awareness/SKILL.md", ".github/skills/resume/SKILL.md"},
+		{"copilot", TargetCopilot, filepath.Join(".github", "copilot-instructions.md"), ".github/skills/attention-lifecycle-awareness/SKILL.md", ".github/skills/resume/SKILL.md"},
 		{"codex", TargetCodex, "AGENTS.md", ".agents/skills/attention-lifecycle-awareness/SKILL.md", ".agents/skills/command-resume/SKILL.md"},
 		{"generic", TargetGeneric, "AGENTS.md", ".ai/skills/attention-lifecycle-awareness/SKILL.md", ".ai/commands/resume.md"},
 		{"grok", TargetGrok, "AGENTS.md", ".grok/skills/attention-lifecycle-awareness/SKILL.md", ".grok/skills/command-resume/SKILL.md"},

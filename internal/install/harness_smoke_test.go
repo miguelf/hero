@@ -393,12 +393,8 @@ func TestInstallState_NoHeroDirIsNoop(t *testing.T) {
 // regardless of which package it lives in.
 func TestHarness_InstalledContentSurvivesOrdinaryCommands(t *testing.T) {
 	// Every install target, per the harness-changes-cover-all-targets
-	// tripwire. This bug was filed as "Codex install is broken", but the
-	// eraser hit the root file of all five AGENTS.md-reading harnesses —
-	// only claude escaped, and only because the pointer path hardcoded the
-	// literal string "AGENTS.md" rather than resolving
-	// nativeInstructionFile(target). Covering one target here is how the
-	// blast radius got misjudged the first time.
+	// tripwire. The root path is resolved through nativeInstructionFile so each
+	// harness's native instruction surface is checked.
 	cases := []struct {
 		name     string
 		target   Target
@@ -408,7 +404,7 @@ func TestHarness_InstalledContentSurvivesOrdinaryCommands(t *testing.T) {
 		{"codex", TargetCodex, "AGENTS.md"},
 		{"opencode", TargetOpenCode, "AGENTS.md"},
 		{"cursor", TargetCursor, "AGENTS.md"},
-		{"copilot", TargetCopilot, "AGENTS.md"},
+		{"copilot", TargetCopilot, filepath.Join(".github", "copilot-instructions.md")},
 		{"generic", TargetGeneric, "AGENTS.md"},
 		{"grok", TargetGrok, "AGENTS.md"},
 	}

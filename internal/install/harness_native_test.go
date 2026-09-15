@@ -38,9 +38,8 @@ func managedBody(t *testing.T, path string) string {
 	return region.Body
 }
 
-// TestHarnessNative_PerTargetFileSet asserts the exact root instruction file
-// each of the seven targets writes: claude → CLAUDE.md only; every other
-// target → AGENTS.md only.
+// TestHarnessNative_PerTargetFileSet asserts the exact native instruction
+// file each target writes.
 func TestHarnessNative_PerTargetFileSet(t *testing.T) {
 	cases := []struct {
 		target Target
@@ -51,7 +50,7 @@ func TestHarnessNative_PerTargetFileSet(t *testing.T) {
 		{TargetCodex, "AGENTS.md", "CLAUDE.md"},
 		{TargetOpenCode, "AGENTS.md", "CLAUDE.md"},
 		{TargetCursor, "AGENTS.md", "CLAUDE.md"},
-		{TargetCopilot, "AGENTS.md", "CLAUDE.md"},
+		{TargetCopilot, filepath.Join(".github", "copilot-instructions.md"), "AGENTS.md"},
 		{TargetGeneric, "AGENTS.md", "CLAUDE.md"},
 		{TargetGrok, "AGENTS.md", "CLAUDE.md"},
 	}
@@ -74,7 +73,7 @@ func TestHarnessNative_PerTargetFileSet(t *testing.T) {
 // native root instruction file. The guidance is authored once as the shared
 // domain-agnostic operationalGuidanceSection wired into defaultSections, so
 // it must reach every pack (engineering, pm, sales, chat) and every target
-// (claude→CLAUDE.md, all others→AGENTS.md). This is the enforcement for
+// (claude→CLAUDE.md, copilot→.github/copilot-instructions.md, all others→AGENTS.md). This is the enforcement for
 // tripwire `harness-changes-cover-all-targets`: dropping the shared section
 // fails the test naming the domain/target that lost the guidance.
 //
