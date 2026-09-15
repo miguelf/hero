@@ -74,6 +74,68 @@ func nativeInstructionFile(t Target) string {
 	}
 }
 
+// NativeInstructionFile returns the project-relative root instruction file the
+// given target natively reads. Exported so orphan handling (upgrade, check)
+// derives file ownership from the same mapping the installers use, instead of
+// a hand-maintained claude/non-claude split that silently rots when a target's
+// native file changes — as Copilot's did when it moved from AGENTS.md to
+// .github/copilot-instructions.md.
+func NativeInstructionFile(t Target) string {
+	return nativeInstructionFile(t)
+}
+
+// InstructionFileOwner pairs a root instruction file with a representative
+// target that natively reads it.
+type InstructionFileOwner struct {
+	// File is the project-relative instruction file (e.g. "AGENTS.md").
+	File string
+	// Target is a representative target reading File. It only affects
+	// managed-body rendering, never which file is written.
+	Target Target
+}
+
+// InstructionFileOwners returns every root instruction file Hero installs,
+// each paired with a representative owning target. TargetGeneric is probed
+// first so whatever file it reads (AGENTS.md today) is represented by a target
+// whose managed body carries no harness-specific sections — a Codex
+// representative would inject the Codex-only workflow section into a file
+// being maintained on behalf of other harnesses.
+func InstructionFileOwners() []InstructionFileOwner {
+	order := append([]Target{TargetGeneric}, allTargets()...)
+	seen := map[string]bool{}
+	var out []InstructionFileOwner
+	for _, t := range order {
+		file := nativeInstructionFile(t)
+		if file == "" || seen[file] {
+			continue
+		}
+		seen[file] = true
+		out = append(out, InstructionFileOwner{File: file, Target: t})
+	}
+	return out
+}
+
+// TargetsForInstructionFile returns every target that natively reads the given
+// project-relative instruction file, in stable target order.
+func TargetsForInstructionFile(file string) []Target {
+	var out []Target
+	for _, t := range allTargets() {
+		if nativeInstructionFile(t) == file {
+			out = append(out, t)
+		}
+	}
+	return out
+}
+
+// allTargets returns every known target in stable layout order.
+func allTargets() []Target {
+	out := make([]Target, 0, len(targetLayouts))
+	for _, layout := range targetLayouts {
+		out = append(out, layout.Target)
+	}
+	return out
+}
+
 // installNativeInstructionFile writes Hero's managed block into the one root
 // instruction file the current target natively reads (per
 // nativeInstructionFile). Claude → CLAUDE.md, Copilot →
@@ -120,6 +182,26 @@ func instructionFileIsHeroManagedOnly(content, defaultH1 string) bool {
 		return false
 	}
 	return prefix == "" || prefix == strings.TrimSpace(defaultH1)
+}
+
+// InstructionFileIsPrunable reports whether the root instruction file at path
+// exists and is entirely Hero-managed — i.e. --prune-orphaned-instruction-files
+// would delete it. Lets callers tell a user that an orphan they just kept is
+// removable without duplicating the safety predicate.
+func InstructionFileIsPrunable(path string) bool {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return false
+	}
+	return instructionFileIsHeroManagedOnly(string(data), defaultInstructionH1(path))
+}
+
+// defaultInstructionH1 is the H1 Hero writes into a fresh instruction file.
+// Derived from the base name so a nested native file
+// (.github/copilot-instructions.md) gets "# copilot-instructions.md" rather
+// than a heading containing a directory path.
+func defaultInstructionH1(file string) string {
+	return "# " + filepath.Base(file)
 }
 
 // installAgentsMd writes Hero's managed block into AGENTS.md. See
@@ -182,7 +264,8 @@ const (
 )
 
 // ApplyOrphanInstructionFilePolicy handles a single root instruction file
-// (AGENTS.md or CLAUDE.md at fileName) whose owning target is NOT in the
+// (fileName is project-relative, e.g. "AGENTS.md", "CLAUDE.md" or
+// ".github/copilot-instructions.md") whose owning target is NOT in the
 // resolved upgrade/install set. It enforces the migration-safety invariant:
 //
 //   - Absent file → OrphanAbsent, no write. Orphan handling never creates
@@ -208,7 +291,7 @@ func ApplyOrphanInstructionFilePolicy(opts Options, fileName string, prune bool)
 		return OrphanAbsent, nil
 	}
 	content := string(data)
-	defaultH1 := "# " + fileName
+	defaultH1 := defaultInstructionH1(fileName)
 
 	if !managed.FindManagedRegion(content).Present {
 		// Pure user-authored file — never touch.

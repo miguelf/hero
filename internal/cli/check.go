@@ -104,15 +104,17 @@ func writeHealthJSON(heroDir string, rows []healthJSONRow) error {
 // orphanInstructionFile describes a root instruction file present on disk
 // whose owning target is not recorded in install-state.json.
 type orphanInstructionFile struct {
-	file string // "CLAUDE.md" or "AGENTS.md"
-	role string // "claude" or "non-claude"
+	file string // e.g. "CLAUDE.md", "AGENTS.md", ".github/copilot-instructions.md"
+	role string // comma-separated targets that natively read the file
 }
 
 // detectOrphanInstructionFiles returns the root instruction files present on
 // disk whose owning target is neither recorded in install-state nor
-// inferable from on-disk content. CLAUDE.md is orphaned when claude is not
-// installed; AGENTS.md is orphaned when no non-claude target is. Informational
-// only.
+// inferable from on-disk content. Ownership comes from
+// install.NativeInstructionFile, so a file is orphaned exactly when none of
+// the targets that natively read it is installed — a Copilot install no
+// longer shields AGENTS.md now that Copilot writes
+// .github/copilot-instructions.md. Informational only.
 func detectOrphanInstructionFiles(projectRoot string) []orphanInstructionFile {
 	// Resolve the installed set as the union of the persisted record and a
 	// filesystem probe. PreviouslyInstalledTargets alone reads
@@ -126,21 +128,33 @@ func detectOrphanInstructionFiles(projectRoot string) []orphanInstructionFile {
 		install.PreviouslyInstalledTargets(projectRoot),
 		install.InferInstalledTargets(projectRoot),
 	)
-	claudeRecorded := false
-	nonClaudeRecorded := false
+	recordedSet := make(map[install.Target]bool, len(recorded))
 	for _, t := range recorded {
-		if t == install.TargetClaude {
-			claudeRecorded = true
-		} else {
-			nonClaudeRecorded = true
-		}
+		recordedSet[t] = true
 	}
+
 	var out []orphanInstructionFile
-	if fileExists(filepath.Join(projectRoot, "CLAUDE.md")) && !claudeRecorded {
-		out = append(out, orphanInstructionFile{file: "CLAUDE.md", role: "claude"})
-	}
-	if fileExists(filepath.Join(projectRoot, "AGENTS.md")) && !nonClaudeRecorded {
-		out = append(out, orphanInstructionFile{file: "AGENTS.md", role: "non-claude"})
+	for _, owner := range install.InstructionFileOwners() {
+		if !fileExists(filepath.Join(projectRoot, owner.File)) {
+			continue
+		}
+		readers := install.TargetsForInstructionFile(owner.File)
+		labels := make([]string, 0, len(readers))
+		installed := false
+		for _, t := range readers {
+			if recordedSet[t] {
+				installed = true
+				break
+			}
+			labels = append(labels, string(t))
+		}
+		if installed {
+			continue
+		}
+		out = append(out, orphanInstructionFile{
+			file: owner.File,
+			role: strings.Join(labels, "/"),
+		})
 	}
 	return out
 }

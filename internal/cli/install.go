@@ -142,7 +142,7 @@ func init() {
 	installCmd.Flags().BoolVar(&installMigrate, "migrate", false, "auto-detect installed harness targets, reconcile drifted copies (newest mtime wins), promote to canonical, and re-install each target as symlinks pointing at canonical")
 	installCmd.Flags().BoolVar(&installJSON, "json", false, "emit a single JSON result object on stdout instead of human-readable progress output (for programmatic consumers like a Hero-native client)")
 	installCmd.Flags().BoolVar(&installNoHooks, "no-hooks", false, "skip installing the pre-commit hook (the hook is otherwise self-installed on first install when no managed block exists)")
-	installCmd.Flags().BoolVar(&installPruneOrphans, "prune-orphaned-instruction-files", false, "after install, delete a root instruction file (AGENTS.md/CLAUDE.md) whose target is not installed AND whose entire content is Hero-managed; files with any user content are never deleted")
+	installCmd.Flags().BoolVar(&installPruneOrphans, "prune-orphaned-instruction-files", false, "after install, delete a root instruction file (AGENTS.md/CLAUDE.md/.github/copilot-instructions.md) that no installed target reads AND whose entire content is Hero-managed; files with any user content are never deleted")
 }
 
 func runInstall(cmd *cobra.Command, args []string) error {
