@@ -67,6 +67,9 @@ type SectionContributor interface {
 //
 // On an existing file with no managed region, the region is inserted
 // after the file's existing H1 (if any), preserving all content below.
+// An existing file that contains nothing but the managed region is
+// treated as brand-new, so a titleless file written by an earlier Hero
+// picks up DefaultH1 on the next write.
 type Writer struct {
 	File      string
 	Sections  []SectionContributor
@@ -111,7 +114,7 @@ func (w Writer) Write(ctx Context) (changed bool, err error) {
 	}
 
 	var newContent string
-	if existing == "" {
+	if isHeadlessManagedOnly(existing) {
 		newContent = renderFreshFile(region, w.DefaultH1)
 	} else {
 		newContent = InsertManagedRegion(existing, region)
@@ -162,6 +165,30 @@ func (w Writer) renderBody(ctx Context) (string, error) {
 	return sb.String(), nil
 }
 
+// isHeadlessManagedOnly reports whether content can be re-rendered from
+// scratch — i.e. whether applying DefaultH1 would destroy nothing.
+//
+// True for an empty/absent file, and for a file that is nothing but the
+// managed region and whitespace. The latter case is what lets a file
+// first written without a title acquire one on a later install: there is
+// no user-owned prefix to preserve, so the fresh-file layout (H1, blank
+// line, region) is safe.
+//
+// Any non-whitespace byte outside the markers — a user's own H1, a
+// paragraph, frontmatter — makes this false, and the region is spliced
+// in place instead, leaving that content exactly as the user wrote it.
+func isHeadlessManagedOnly(content string) bool {
+	if strings.TrimSpace(content) == "" {
+		return true
+	}
+	region := FindManagedRegion(content)
+	if !region.Present {
+		return false
+	}
+	outside := content[:region.StartIdx] + content[region.EndIdx:]
+	return strings.TrimSpace(outside) == ""
+}
+
 // renderFreshFile produces the content for a brand-new file: optional
 // H1, blank line, region.
 func renderFreshFile(region, defaultH1 string) string {
@@ -206,7 +233,7 @@ func (w Writer) PlanContent(ctx Context) (existing, next string, exists bool, er
 		migrated = stripLegacySnapshotBlock(existing)
 	}
 
-	if migrated == "" {
+	if isHeadlessManagedOnly(migrated) {
 		next = renderFreshFile(region, w.DefaultH1)
 	} else {
 		next = InsertManagedRegion(migrated, region)

@@ -361,3 +361,69 @@ func TestWriter_RendersErrorFromSection(t *testing.T) {
 		t.Errorf("error message should name the section id; got: %v", err)
 	}
 }
+
+// A file written by an earlier Hero that is nothing but the managed
+// region has no user-owned prefix to protect, so the next write adopts
+// DefaultH1. Without this, a titleless file stays titleless forever
+// because the insert path preserves whatever prefix it finds — even an
+// empty one.
+func TestWriter_TitlelessManagedOnlyFileGainsDefaultH1(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "copilot-instructions.md")
+	if err := os.WriteFile(path, []byte(RenderManagedRegion("old", "stale body.")+"\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	w := Writer{
+		File:      path,
+		Sections:  []SectionContributor{fakeSection{id: "a", body: "fresh body."}},
+		DefaultH1: "# GitHub Copilot Instructions",
+	}
+	if _, err := w.Write(Context{HeroVersion: "test"}); err != nil {
+		t.Fatalf("Write: %v", err)
+	}
+
+	got, _ := os.ReadFile(path)
+	out := string(got)
+	if first := strings.SplitN(out, "\n", 2)[0]; first != "# GitHub Copilot Instructions" {
+		t.Errorf("first line = %q, want the DefaultH1", first)
+	}
+	if !strings.Contains(out, "fresh body.") {
+		t.Errorf("region was not regenerated:\n%s", out)
+	}
+	if c := strings.Count(out, "<!-- hero:managed-start"); c != 1 {
+		t.Errorf("want 1 managed-start, got %d", c)
+	}
+}
+
+// The corollary invariant: a user's own heading is never replaced by
+// DefaultH1, because any non-whitespace content outside the markers
+// makes the file user-owned.
+func TestWriter_UserH1SurvivesDefaultH1(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "AGENTS.md")
+	body := "# My Project\n\nIntro paragraph.\n\n" + RenderManagedRegion("old", "stale body.") + "\n\nTrailing note.\n"
+	if err := os.WriteFile(path, []byte(body), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	w := Writer{
+		File:      path,
+		Sections:  []SectionContributor{fakeSection{id: "a", body: "fresh body."}},
+		DefaultH1: "# AGENTS.md",
+	}
+	if _, err := w.Write(Context{HeroVersion: "test"}); err != nil {
+		t.Fatalf("Write: %v", err)
+	}
+
+	got, _ := os.ReadFile(path)
+	out := string(got)
+	for _, keep := range []string{"# My Project", "Intro paragraph.", "Trailing note.", "fresh body."} {
+		if !strings.Contains(out, keep) {
+			t.Errorf("lost %q:\n%s", keep, out)
+		}
+	}
+	if strings.Contains(out, "# AGENTS.md") {
+		t.Errorf("DefaultH1 must not be injected over a user heading:\n%s", out)
+	}
+}
