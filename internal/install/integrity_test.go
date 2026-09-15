@@ -25,7 +25,7 @@ var integrityTargets = []struct {
 	{"codex", TargetCodex, "AGENTS.md"},
 	{"opencode", TargetOpenCode, "AGENTS.md"},
 	{"cursor", TargetCursor, "AGENTS.md"},
-	{"copilot", TargetCopilot, "AGENTS.md"},
+	{"copilot", TargetCopilot, filepath.Join(".github", "copilot-instructions.md")},
 	{"generic", TargetGeneric, "AGENTS.md"},
 	{"grok", TargetGrok, "AGENTS.md"},
 }

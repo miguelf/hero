@@ -42,12 +42,8 @@ func runCopilot(opts Options) (*Result, error) {
 	}
 	result.skillDirs = skillDirs
 
-	instructionsPath := filepath.Join(opts.TargetDir, ".github", "copilot-instructions.md")
-	if err := installInstructionsMd(opts, result, instructionsPath, "copilot"); err != nil {
-		return nil, fmt.Errorf("installing copilot-instructions.md: %w", err)
-	}
 	if err := installNativeInstructionFile(opts, result); err != nil {
-		return nil, fmt.Errorf("installing AGENTS.md: %w", err)
+		return nil, fmt.Errorf("installing copilot-instructions.md: %w", err)
 	}
 	return result, nil
 }
