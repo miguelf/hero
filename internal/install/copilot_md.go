@@ -25,7 +25,7 @@ func installCopilotMd(opts Options, result *Result, path string) error {
 	return installManagedMarkdown(opts, result, installManagedSpec{
 		Path:      path,
 		Label:     ".github/copilot-instructions.md",
-		DefaultH1: "# copilot-instructions.md",
+		DefaultH1: defaultInstructionH1(path),
 		Sections:  defaultSections(opts, path),
 	})
 }

@@ -170,8 +170,10 @@ func installNativeInstructionFile(opts Options, result *Result) error {
 // --prune-orphaned-instruction-files: any user-authored content outside the
 // markers makes it return false, so a file a user has edited is never
 // pruned. Extends managed.IsLegacyHeroStub, which does not tolerate the
-// Hero-written default H1.
-func instructionFileIsHeroManagedOnly(content, defaultH1 string) bool {
+// Hero-written default H1. acceptedH1s lists every heading Hero itself may
+// have written for this file, so a heading Hero changed across versions
+// doesn't make an otherwise Hero-only file look user-authored.
+func instructionFileIsHeroManagedOnly(content string, acceptedH1s ...string) bool {
 	region := managed.FindManagedRegion(content)
 	if !region.Present {
 		return false
@@ -181,7 +183,15 @@ func instructionFileIsHeroManagedOnly(content, defaultH1 string) bool {
 	if suffix != "" {
 		return false
 	}
-	return prefix == "" || prefix == strings.TrimSpace(defaultH1)
+	if prefix == "" {
+		return true
+	}
+	for _, h1 := range acceptedH1s {
+		if prefix == strings.TrimSpace(h1) {
+			return true
+		}
+	}
+	return false
 }
 
 // InstructionFileIsPrunable reports whether the root instruction file at path
@@ -193,15 +203,36 @@ func InstructionFileIsPrunable(path string) bool {
 	if err != nil {
 		return false
 	}
-	return instructionFileIsHeroManagedOnly(string(data), defaultInstructionH1(path))
+	return instructionFileIsHeroManagedOnly(string(data), heroWrittenH1s(path)...)
 }
 
+// copilotInstructionsH1 titles Copilot's native instruction file. Every other
+// instruction file is named for what it is (AGENTS.md, CLAUDE.md), so echoing
+// the base name works as a title. "# copilot-instructions.md" does not — the
+// file is Copilot's instructions document, so it gets a document heading.
+const copilotInstructionsH1 = "# GitHub Copilot Instructions"
+
 // defaultInstructionH1 is the H1 Hero writes into a fresh instruction file.
-// Derived from the base name so a nested native file
-// (.github/copilot-instructions.md) gets "# copilot-instructions.md" rather
-// than a heading containing a directory path.
+// Single source of truth shared by the installers and the prune predicate, so
+// a heading change can never make Hero's own file read as user-authored.
 func defaultInstructionH1(file string) string {
-	return "# " + filepath.Base(file)
+	base := filepath.Base(file)
+	if base == "copilot-instructions.md" {
+		return copilotInstructionsH1
+	}
+	return "# " + base
+}
+
+// heroWrittenH1s returns every heading Hero has written at the top of a fresh
+// instruction file, current first. Headings Hero has since stopped writing
+// stay listed so a file created by an older Hero remains recognizable as
+// Hero-only content.
+func heroWrittenH1s(file string) []string {
+	out := []string{defaultInstructionH1(file)}
+	if filepath.Base(file) == "copilot-instructions.md" {
+		out = append(out, "# copilot-instructions.md")
+	}
+	return out
 }
 
 // installAgentsMd writes Hero's managed block into AGENTS.md. See
@@ -298,7 +329,7 @@ func ApplyOrphanInstructionFilePolicy(opts Options, fileName string, prune bool)
 		return OrphanPreserved, nil
 	}
 
-	if prune && instructionFileIsHeroManagedOnly(content, defaultH1) {
+	if prune && instructionFileIsHeroManagedOnly(content, heroWrittenH1s(fileName)...) {
 		if opts.DryRun {
 			return OrphanPruned, nil
 		}
