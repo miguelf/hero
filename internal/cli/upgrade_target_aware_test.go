@@ -205,3 +205,131 @@ func TestUpgrade_OrphanPrune_OptIn(t *testing.T) {
 		t.Errorf("managed-only phantom AGENTS.md should have been pruned with the flag")
 	}
 }
+
+// Copilot's native file moved from AGENTS.md to
+// .github/copilot-instructions.md. A copilot-only upgrade must therefore treat
+// the leftover AGENTS.md as an orphan: kept and refreshed by default (never
+// silently skipped as "owned by copilot"), and removable with the opt-in flag.
+func TestUpgrade_CopilotOnly_LeftoverAgentsMdIsOrphan(t *testing.T) {
+	setup := func(t *testing.T) *testEnv {
+		t.Helper()
+		env := newTestEnv(t)
+		stampOldVersion(t, env.heroDir)
+		if err := install.PersistInferredTargets(env.dir, []install.Target{install.TargetCopilot}, "0.9.0"); err != nil {
+			t.Fatalf("persist: %v", err)
+		}
+		if err := os.MkdirAll(filepath.Join(env.dir, ".github", "copilot", "agents"), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		return env
+	}
+
+	t.Run("managed region refreshed by default", func(t *testing.T) {
+		upgradeContentFS = upgradeTestFS()
+		defer func() { upgradeContentFS = nil }()
+		rootCmd.Version = "1.0.0"
+		defer func() { rootCmd.Version = "" }()
+		env := setup(t)
+
+		stale := "# AGENTS.md\n\n" + managed.RenderManagedRegion("v0", "STALE BODY") + "\n"
+		if err := os.WriteFile(filepath.Join(env.dir, "AGENTS.md"), []byte(stale), 0o644); err != nil {
+			t.Fatal(err)
+		}
+
+		if _, err := runCmd("upgrade"); err != nil {
+			t.Fatalf("upgrade: %v", err)
+		}
+
+		data, err := os.ReadFile(filepath.Join(env.dir, "AGENTS.md"))
+		if err != nil {
+			t.Fatalf("AGENTS.md must not be deleted without the prune flag: %v", err)
+		}
+		if strings.Contains(string(data), "STALE BODY") {
+			t.Errorf("leftover AGENTS.md was skipped as copilot-owned instead of maintained as an orphan:\n%s", string(data))
+		}
+	})
+
+	t.Run("pruned with the opt-in flag", func(t *testing.T) {
+		upgradeContentFS = upgradeTestFS()
+		defer func() { upgradeContentFS = nil }()
+		rootCmd.Version = "1.0.0"
+		defer func() { rootCmd.Version = "" }()
+		env := setup(t)
+
+		managedOnly := "# AGENTS.md\n\n" + managed.RenderManagedRegion("v0", "X") + "\n"
+		if err := os.WriteFile(filepath.Join(env.dir, "AGENTS.md"), []byte(managedOnly), 0o644); err != nil {
+			t.Fatal(err)
+		}
+
+		if _, err := runCmd("upgrade", "--prune-orphaned-instruction-files"); err != nil {
+			t.Fatalf("upgrade: %v", err)
+		}
+
+		if _, err := os.Stat(filepath.Join(env.dir, "AGENTS.md")); err == nil {
+			t.Errorf("copilot's leftover managed-only AGENTS.md should be prunable")
+		}
+	})
+
+	t.Run("user content preserved even with the flag", func(t *testing.T) {
+		upgradeContentFS = upgradeTestFS()
+		defer func() { upgradeContentFS = nil }()
+		rootCmd.Version = "1.0.0"
+		defer func() { rootCmd.Version = "" }()
+		env := setup(t)
+
+		withUser := "# AGENTS.md\n\n" + managed.RenderManagedRegion("v0", "X") + "\nUSER KEEP\n"
+		if err := os.WriteFile(filepath.Join(env.dir, "AGENTS.md"), []byte(withUser), 0o644); err != nil {
+			t.Fatal(err)
+		}
+
+		if _, err := runCmd("upgrade", "--prune-orphaned-instruction-files"); err != nil {
+			t.Fatalf("upgrade: %v", err)
+		}
+
+		data, err := os.ReadFile(filepath.Join(env.dir, "AGENTS.md"))
+		if err != nil {
+			t.Fatalf("AGENTS.md with user content must never be deleted: %v", err)
+		}
+		if !strings.Contains(string(data), "USER KEEP") {
+			t.Errorf("user content outside markers must be preserved")
+		}
+	})
+}
+
+// Multi-target safety: when copilot AND an AGENTS.md-reading harness (codex)
+// are both installed, AGENTS.md is owned by codex — even --prune-orphaned-
+// instruction-files must leave it alone.
+func TestUpgrade_CopilotPlusCodex_AgentsMdNeverPruned(t *testing.T) {
+	env := newTestEnv(t)
+	upgradeContentFS = upgradeTestFS()
+	defer func() { upgradeContentFS = nil }()
+	stampOldVersion(t, env.heroDir)
+	rootCmd.Version = "1.0.0"
+	defer func() { rootCmd.Version = "" }()
+
+	if err := install.PersistInferredTargets(env.dir, []install.Target{install.TargetCopilot, install.TargetCodex}, "0.9.0"); err != nil {
+		t.Fatalf("persist: %v", err)
+	}
+	if err := os.MkdirAll(filepath.Join(env.dir, ".github", "copilot", "agents"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(filepath.Join(env.dir, ".codex"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	managedOnly := "# AGENTS.md\n\n" + managed.RenderManagedRegion("v0", "X") + "\n"
+	if err := os.WriteFile(filepath.Join(env.dir, "AGENTS.md"), []byte(managedOnly), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := runCmd("upgrade", "--prune-orphaned-instruction-files"); err != nil {
+		t.Fatalf("upgrade: %v", err)
+	}
+
+	data, err := os.ReadFile(filepath.Join(env.dir, "AGENTS.md"))
+	if err != nil {
+		t.Fatalf("AGENTS.md is codex's native file and must survive pruning: %v", err)
+	}
+	if strings.Contains(string(data), "hero:managed-start") == false {
+		t.Errorf("AGENTS.md lost its managed region")
+	}
+}
