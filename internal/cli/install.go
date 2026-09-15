@@ -87,9 +87,10 @@ var installCmd = &cobra.Command{
 	Long: `Copies hero content into the target tool's expected directory structure.
 
 Install is harness-native: each target gets only the root instruction file it
-natively reads — CLAUDE.md for claude, AGENTS.md for every other target
-(codex, opencode, cursor, copilot, generic, grok). Installing multiple targets that
-include claude produces both files with the same Hero-managed body. The
+natively reads — CLAUDE.md for claude, .github/copilot-instructions.md for
+copilot, AGENTS.md for every other target (codex, opencode, cursor, generic,
+grok). Installing multiple targets produces each of those files with the same
+Hero-managed body. The
 installed target set is recorded in .hero/install-state.json so 'hero upgrade'
 stays faithful to what was installed.`,
 	Args: cobra.MinimumNArgs(1),
