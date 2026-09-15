@@ -224,6 +224,38 @@ func TestLoadPackAgentsMdBody_OverrideShortCircuits(t *testing.T) {
 	}
 }
 
+// TestContentPathsForBody_CommandsPointerIsTargetAware pins the
+// commands-as-skills contract: harnesses without a Hero-owned commands
+// directory must point the commands entry at their skills directory,
+// both in pack-authored bodies and in the Go fallback.
+func TestContentPathsForBody_CommandsPointerIsTargetAware(t *testing.T) {
+	packBody := "- `<harness>/commands/` — Slash command definitions\n- `<harness>/skills/` — Skills"
+
+	for _, tc := range []struct {
+		target       Target
+		wantCommands string
+	}{
+		{TargetClaude, "<harness>/commands/"},
+		{TargetCopilot, "<harness>/skills/"},
+		{TargetCodex, "<harness>/skills/"},
+		{TargetGrok, "<harness>/skills/"},
+	} {
+		t.Run(string(tc.target), func(t *testing.T) {
+			opts := Options{Target: tc.target}
+			if got := resolveContentPathsForBody(opts).Commands; got != tc.wantCommands {
+				t.Errorf("Commands = %q, want %q", got, tc.wantCommands)
+			}
+
+			override := []byte("# Custom Pack\n\n" + packBody)
+			body, _, _ := loadPackAgentsMdBody(Options{Target: tc.target, AgentsMdBodyOverride: override})
+			wantLine := "- `" + tc.wantCommands + "` — Slash command definitions"
+			if !strings.Contains(body, wantLine) {
+				t.Errorf("pack body missing %q:\n%s", wantLine, body)
+			}
+		})
+	}
+}
+
 // TestLoadPackAgentsMdBody_PackMissingFallsBack ensures the Go fallback
 // kicks in when the pack FS has no AGENTS.md.
 func TestLoadPackAgentsMdBody_PackMissingFallsBack(t *testing.T) {

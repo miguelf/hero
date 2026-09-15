@@ -276,24 +276,26 @@ func defaultSections(opts Options, filePath string) []managed.SectionContributor
 // rules a pack body must follow are documented in
 // .hero/knowledge/conventions/domain-agents-md-skeleton.md.
 func loadPackAgentsMdBody(opts Options) (body, title string, fellBack bool) {
+	paths := resolveContentPathsForBody(opts)
+
 	if len(opts.AgentsMdBodyOverride) > 0 {
 		raw := string(opts.AgentsMdBodyOverride)
 		b, t := splitPackAgentsMd(raw)
-		return b, t, false
+		return retargetContentPaths(b, paths), t, false
 	}
 
 	srcFS := opts.sourceFS()
 	if srcFS != nil {
 		if data, err := fs.ReadFile(srcFS, "AGENTS.md"); err == nil && len(data) > 0 {
 			b, t := splitPackAgentsMd(string(data))
-			return b, t, false
+			return retargetContentPaths(b, paths), t, false
 		}
 	}
 
 	if opts.Domain != "" && opts.Domain != "engineering" {
 		fmt.Fprintf(os.Stderr, "warning: domain %q has no AGENTS.md — falling back to engineering routing table\n", opts.Domain)
 	}
-	return generateEngineeringAgentsMdBody(resolveContentPathsForBody(opts)), "", true
+	return generateEngineeringAgentsMdBody(paths), "", true
 }
 
 // splitPackAgentsMd separates the leading H1 line from the rest of the
@@ -341,12 +343,56 @@ type contentPathsForBody struct {
 // where agents/commands/skills live for the installed harness. Under
 // render-direct-install, each target writes to its own harness dir, so
 // the AGENTS.md body just lists generic per-harness destinations.
+// Harnesses without a Hero-owned commands directory install commands as
+// skills, so their commands pointer resolves to the skills directory.
 func resolveContentPathsForBody(opts Options) contentPathsForBody {
-	return contentPathsForBody{
+	paths := contentPathsForBody{
 		Agents:   "<harness>/agents/",
 		Commands: "<harness>/commands/",
 		Skills:   "<harness>/skills/",
 	}
+	if targetInstallsCommandsAsSkills(opts.Target) {
+		paths.Commands = paths.Skills
+	}
+	return paths
+}
+
+// targetInstallsCommandsAsSkills reports whether a target has no
+// Hero-owned commands directory. Copilot, Codex, and Grok Build cannot
+// load external command definitions, so Hero renders each command as a
+// skill in their skills directory.
+func targetInstallsCommandsAsSkills(target Target) bool {
+	switch target {
+	case TargetCopilot, TargetCodex, TargetGrok:
+		return true
+	default:
+		return false
+	}
+}
+
+// retargetContentPaths rewrites the canonical content-path pointers in a
+// pack-authored body to the paths resolved for the active target. Pack
+// bodies are authored against the default layout (see
+// .hero/knowledge/conventions/domain-agents-md-skeleton.md); this is the
+// single seam that adapts them per harness.
+func retargetContentPaths(body string, paths contentPathsForBody) string {
+	defaults := contentPathsForBody{
+		Agents:   "<harness>/agents/",
+		Commands: "<harness>/commands/",
+		Skills:   "<harness>/skills/",
+	}
+	replacements := []struct{ from, to string }{
+		{defaults.Agents, paths.Agents},
+		{defaults.Commands, paths.Commands},
+		{defaults.Skills, paths.Skills},
+	}
+	for _, r := range replacements {
+		if r.from == r.to {
+			continue
+		}
+		body = strings.ReplaceAll(body, r.from, r.to)
+	}
+	return body
 }
 
 // installManagedSpec describes how installManagedMarkdown should handle a
