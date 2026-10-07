@@ -58,6 +58,7 @@ func runInit(cmd *cobra.Command, args []string) error {
 	cfg := config.DefaultConfig()
 	cfg.Folder = initFolder
 	cfg.PeerID = peering.MintPeerID()
+	cfg.Name = filepath.Base(projectRoot)
 
 	// Born projected: fresh workspaces never enter legacy NEXT mode, so
 	// they never hit the checkpoint migration gate. This is set only on
@@ -555,6 +556,19 @@ func ensureManagedGitignoreBlock(gitignorePath string) error {
 
 	body := mergeGitignoreBlock(string(existing), managed)
 	return os.WriteFile(gitignorePath, []byte(body), 0o644)
+}
+
+// refreshManagedGitignoreIfPresent re-renders the hero-managed block in the
+// root .gitignore when one already exists, so entries added in a newer Hero
+// (e.g. MCP pidfiles) reach workspaces initialized earlier. Like hook
+// refresh, it never creates the block — `hero init` is the opt-in.
+func refreshManagedGitignoreIfPresent(projectRoot string, dryRun bool) error {
+	path := filepath.Join(projectRoot, ".gitignore")
+	existing, err := os.ReadFile(path)
+	if err != nil || !strings.Contains(string(existing), gitignoreMarkerStart) || dryRun {
+		return nil
+	}
+	return ensureManagedGitignoreBlock(path)
 }
 
 // mergeGitignoreBlock replaces or appends the hero-managed marker

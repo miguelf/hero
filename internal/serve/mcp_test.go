@@ -83,6 +83,44 @@ func TestMCPTrackerRequestUsesVersionedBrokerContract(t *testing.T) {
 	}
 }
 
+func TestToolSkillRunDistinguishesSavedSkillsFromBuiltInCommands(t *testing.T) {
+	root := t.TempDir()
+	heroDir := filepath.Join(root, ".hero")
+	skillsDir := filepath.Join(heroDir, "skills")
+	if err := os.MkdirAll(skillsDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	srv := NewMCPServer(heroDir, root, "test")
+
+	missing, err := srv.toolSkillRun(map[string]interface{}{"slug": "decide"})
+	if err != nil {
+		t.Fatalf("missing saved skill: %v", err)
+	}
+	for _, want := range []string{"Saved project skill", ".hero/skills", "harness-native command-*", ".agents/skills/command-<name>/SKILL.md"} {
+		if !strings.Contains(missing, want) {
+			t.Errorf("missing response lacks %q:\n%s", want, missing)
+		}
+	}
+
+	saved := `---
+title: Release checklist
+slug: release-checklist
+---
+## Steps
+1. Prompt agent: Verify the release notes.
+`
+	if err := os.WriteFile(filepath.Join(skillsDir, "release-checklist.md"), []byte(saved), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	output, err := srv.toolSkillRun(map[string]interface{}{"slug": "release-checklist"})
+	if err != nil {
+		t.Fatalf("run saved skill: %v", err)
+	}
+	if !strings.Contains(output, "Skill: Release checklist") || !strings.Contains(output, "Verify the release notes") {
+		t.Fatalf("saved skill did not render normally:\n%s", output)
+	}
+}
+
 // sendMulti sends multiple requests (newline-separated) and returns all responses.
 func sendMulti(t *testing.T, srv *MCPServer, reqs ...JSONRPCRequest) []JSONRPCResponse {
 	t.Helper()
@@ -406,7 +444,7 @@ func TestMCP_ToolsList(t *testing.T) {
 		t.Fatalf("decode result: %v", err)
 	}
 
-	if want := 65 + len(codehostbroker.Operations()); len(result.Tools) != want {
+	if want := 68 + len(codehostbroker.Operations()); len(result.Tools) != want {
 		t.Errorf("expected %d tools, got %d", want, len(result.Tools))
 	}
 
@@ -416,6 +454,7 @@ func TestMCP_ToolsList(t *testing.T) {
 		"hero_queue": true, "hero_kickoff": true,
 		"hero_goal":      true,
 		"hero_knowledge": true, "hero_read_spec": true,
+		"hero_spec": true, "hero_handoff": true, "hero_work": true,
 		"hero_ask": true, "hero_anchor": true,
 		"hero_pulse": true, "hero_skill_run": true,
 		"hero_claim": true, "hero_velocity": true,
