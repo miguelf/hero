@@ -3,6 +3,7 @@ package spec
 import (
 	"bufio"
 	"fmt"
+	"github.com/hero-engine/hero/internal/fsutil"
 	"gopkg.in/yaml.v3"
 	"os"
 	"path/filepath"
@@ -264,6 +265,10 @@ type Spec struct {
 	// LastSynthesized is the date an `explainer` entry was last
 	// synthesized or amended (YYYY-MM-DD). Empty on non-explainer specs.
 	LastSynthesized string
+
+	// Archived is true when Discover found the spec in the workspace's
+	// archive (<hero dir>/specs/), whatever the hero folder is named.
+	Archived bool `json:"-"`
 }
 
 // ReceivedFromBlock mirrors contracts/peering.ReceivedFrom for use in
@@ -1246,7 +1251,7 @@ func Discover(heroDir string) ([]*Spec, error) {
 	// loading the same spec directory twice.
 	loadedDirs := make(map[string]bool)
 
-	err := filepath.Walk(heroDir, func(path string, info os.FileInfo, err error) error {
+	err := fsutil.Walk(heroDir, func(path string, info os.FileInfo, err error) error {
 		if path != heroDir && hiddenHeroPath(heroDir, path) {
 			if err != nil {
 				return nil
@@ -1321,6 +1326,10 @@ func Discover(heroDir string) ([]*Spec, error) {
 		return nil, err
 	}
 
+	archive := filepath.Join(heroDir, "specs") + string(filepath.Separator)
+	for _, s := range specs {
+		s.Archived = strings.HasPrefix(s.Path, archive)
+	}
 	return specs, nil
 }
 

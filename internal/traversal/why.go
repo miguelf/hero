@@ -87,7 +87,7 @@ func Why(store *graph.Store, repoKey, target string, maxDepth int) (*Trace, erro
 	if target == "" {
 		return nil, fmt.Errorf("traversal: empty target")
 	}
-	rootHop, rootID, err := resolveTarget(store, repoKey, target)
+	rootHop, rootID, err := ResolveTarget(store, repoKey, target)
 	if err != nil {
 		return nil, err
 	}
@@ -103,10 +103,15 @@ func Why(store *graph.Store, repoKey, target string, maxDepth int) (*Trace, erro
 	}, nil
 }
 
-// resolveTarget returns the target's hop view + numeric node id. Tries
+// ResolveTarget returns the target's hop view + numeric node id. Tries
 // the repo-scoped row first, then falls back to any matching key
-// (mission, person, etc. live globally without a Repo stamp).
-func resolveTarget(store *graph.Store, repoKey, target string) (Hop, int64, error) {
+// (mission, person, etc. live globally without a Repo stamp). A promoted
+// Mail intake shares its slug with the spec it became; the spec always
+// wins, so `hero why` walks the spec's derived_from -> intake -> mail chain.
+// ingested_at has one-second resolution, so id breaks remaining ties
+// deterministically. `hero why` and `hero why --edges` both resolve through
+// this one query so they always agree on the start node.
+func ResolveTarget(store *graph.Store, repoKey, target string) (Hop, int64, error) {
 	row := store.DB().QueryRow(
 		`SELECT id, type, key,
 		        COALESCE(json_extract(props, '$.title'), key) AS title,
@@ -115,7 +120,7 @@ func resolveTarget(store *graph.Store, repoKey, target string) (Hop, int64, erro
 		        domain
 		   FROM nodes
 		  WHERE key = ? AND valid_to IS NULL AND (repo = ? OR COALESCE(repo,'') = '')
-		  ORDER BY (repo = ?) DESC, ingested_at DESC
+		  ORDER BY (repo = ?) DESC, (type = 'Intake') ASC, ingested_at DESC, id DESC
 		  LIMIT 1`,
 		target, repoKey, repoKey,
 	)
